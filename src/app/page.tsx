@@ -1,4 +1,3 @@
-
 "use client";
 
 import { TaskProvider, useTasks } from '@/app/context/TaskContext';
@@ -9,9 +8,11 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { format, startOfWeek, endOfWeek, isWithinInterval, isToday } from 'date-fns';
 import { CheckCircle2, AlertCircle, Clock, Calendar as CalendarIcon } from 'lucide-react';
+import { useSettings } from '@/app/context/SettingsContext';
 
 function DashboardContent() {
   const { tasks, getOverdueTasks } = useTasks();
+  const { t } = useSettings();
   
   const todayTasks = tasks.filter(t => isToday(t.dueDate));
   const completedToday = todayTasks.filter(t => t.completed).length;
@@ -30,7 +31,7 @@ function DashboardContent() {
       
       <main className="max-w-screen-md mx-auto px-4 py-8 space-y-8">
         <header className="space-y-2 text-center md:text-left">
-          <h1 className="text-4xl font-bold text-primary tracking-tight">Today's Compass</h1>
+          <h1 className="text-4xl font-bold text-primary tracking-tight">{t('todaysCompass')}</h1>
           <p className="text-muted-foreground">{format(new Date(), 'EEEE, MMMM do')}</p>
         </header>
 
@@ -39,13 +40,13 @@ function DashboardContent() {
           <CardHeader className="pb-2">
             <CardTitle className="text-lg flex items-center gap-2">
               <CheckCircle2 className="w-5 h-5 text-primary" />
-              Daily Focus
+              {t('dailyFocus')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex justify-between items-end">
               <div className="text-3xl font-bold">{completedToday}/{todayTasks.length}</div>
-              <div className="text-sm text-muted-foreground">Tasks Completed</div>
+              <div className="text-sm text-muted-foreground">{t('tasksCompleted')}</div>
             </div>
             <Progress value={progressPercent} className="h-2" />
           </CardContent>
@@ -56,12 +57,12 @@ function DashboardContent() {
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium flex items-center gap-2 text-muted-foreground">
                 <CalendarIcon className="w-4 h-4" />
-                WEEKLY SUMMARY
+                {t('weeklySummary')}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{completedWeekly} / {weeklyTasks.length}</div>
-              <p className="text-xs text-muted-foreground mt-1">Tasks finished this week</p>
+              <p className="text-xs text-muted-foreground mt-1">{t('tasksFinishedWeek')}</p>
             </CardContent>
           </Card>
           
@@ -69,12 +70,12 @@ function DashboardContent() {
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium flex items-center gap-2 text-muted-foreground">
                 <AlertCircle className="w-4 h-4 text-accent" />
-                OVERDUE
+                {t('overdue')}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-accent">{overdue.length}</div>
-              <p className="text-xs text-muted-foreground mt-1">Needs immediate attention</p>
+              <p className="text-xs text-muted-foreground mt-1">{t('needsAttention')}</p>
             </CardContent>
           </Card>
         </div>
@@ -85,7 +86,7 @@ function DashboardContent() {
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-bold flex items-center gap-2">
                 <AlertCircle className="w-5 h-5 text-accent" />
-                Unfinished Tasks
+                {t('unfinishedTasks')}
               </h2>
             </div>
             <div className="grid gap-3">
@@ -101,7 +102,7 @@ function DashboardContent() {
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-bold flex items-center gap-2">
               <Clock className="w-5 h-5 text-primary" />
-              Upcoming Today
+              {t('upcomingToday')}
             </h2>
           </div>
           <div className="grid gap-3">
@@ -112,9 +113,9 @@ function DashboardContent() {
                 <TaskCard key={task.id} task={task} />
               ))
             ) : (
-              <div className="text-center py-12 bg-white rounded-xl border border-dashed text-muted-foreground">
-                <p>No tasks scheduled for today.</p>
-                <p className="text-sm">Enjoy your clear compass!</p>
+              <div className="text-center py-12 bg-card rounded-xl border border-dashed text-muted-foreground">
+                <p>{t('noTasksToday')}</p>
+                <p className="text-sm">{t('enjoyClearDay')}</p>
               </div>
             )}
           </div>

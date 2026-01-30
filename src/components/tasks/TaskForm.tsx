@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from 'react';
@@ -15,9 +14,11 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { useSettings } from '@/app/context/SettingsContext';
 
 export function TaskForm() {
   const { addTask } = useTasks();
+  const { t } = useSettings();
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -48,6 +49,9 @@ export function TaskForm() {
     setOpen(false);
   };
 
+  const categories: Category[] = ['Work', 'Personal', 'Fitness', 'Health', 'Urgent', 'Other'];
+  const priorities: Task['priority'][] = ['Low', 'Medium', 'High'];
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -57,14 +61,14 @@ export function TaskForm() {
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Navigate New Task</DialogTitle>
+          <DialogTitle>{t('newTask')}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 pt-4">
           <div className="space-y-2">
-            <Label htmlFor="title">Task Title</Label>
+            <Label htmlFor="title">{t('taskTitle')}</Label>
             <Input 
               id="title" 
-              placeholder="What needs to be done?" 
+              placeholder={t('titlePlaceholder')} 
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               required
@@ -72,10 +76,10 @@ export function TaskForm() {
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="description">Description (Optional)</Label>
+            <Label htmlFor="description">{t('description')}</Label>
             <Textarea 
               id="description" 
-              placeholder="Any details..."
+              placeholder={t('descPlaceholder')}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
             />
@@ -83,32 +87,29 @@ export function TaskForm() {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Category</Label>
+              <Label>{t('category')}</Label>
               <Select value={category} onValueChange={(v: Category) => setCategory(v)}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Work">Work</SelectItem>
-                  <SelectItem value="Personal">Personal</SelectItem>
-                  <SelectItem value="Fitness">Fitness</SelectItem>
-                  <SelectItem value="Health">Health</SelectItem>
-                  <SelectItem value="Urgent">Urgent</SelectItem>
-                  <SelectItem value="Other">Other</SelectItem>
+                  {categories.map(cat => (
+                    <SelectItem key={cat} value={cat}>{t(cat.toLowerCase() as any)}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
             
             <div className="space-y-2">
-              <Label>Priority</Label>
+              <Label>{t('priority')}</Label>
               <Select value={priority} onValueChange={(v: Task['priority']) => setPriority(v)}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Low">Low</SelectItem>
-                  <SelectItem value="Medium">Medium</SelectItem>
-                  <SelectItem value="High">High</SelectItem>
+                  {priorities.map(p => (
+                    <SelectItem key={p} value={p}>{t(p.toLowerCase() as any)}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -116,7 +117,7 @@ export function TaskForm() {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Date</Label>
+              <Label>{t('date')}</Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
@@ -142,7 +143,7 @@ export function TaskForm() {
             </div>
             
             <div className="space-y-2">
-              <Label>Time</Label>
+              <Label>{t('time')}</Label>
               <Input 
                 type="time" 
                 value={time}
@@ -152,7 +153,7 @@ export function TaskForm() {
           </div>
 
           <Button type="submit" className="w-full bg-accent text-accent-foreground hover:bg-accent/90">
-            Create Task
+            {t('createTask')}
           </Button>
         </form>
       </DialogContent>

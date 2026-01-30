@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Task } from '@/app/lib/types';
@@ -6,10 +5,11 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Trash2, Clock, MapPin, Tag } from 'lucide-react';
+import { Trash2, Clock, Tag } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTasks } from '@/app/context/TaskContext';
 import { format } from 'date-fns';
+import { useSettings } from '@/app/context/SettingsContext';
 
 interface TaskCardProps {
   task: Task;
@@ -17,6 +17,7 @@ interface TaskCardProps {
 
 export function TaskCard({ task }: TaskCardProps) {
   const { toggleTask, deleteTask } = useTasks();
+  const { t } = useSettings();
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -50,7 +51,7 @@ export function TaskCard({ task }: TaskCardProps) {
             </h3>
             <div className="flex gap-2">
               <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0", getPriorityColor(task.priority))}>
-                {task.priority}
+                {t(task.priority.toLowerCase() as any)}
               </Badge>
             </div>
           </div>
@@ -68,7 +69,7 @@ export function TaskCard({ task }: TaskCardProps) {
             </span>
             <span className="flex items-center gap-1">
               <Tag className="w-3 h-3" />
-              {task.category}
+              {t(task.category.toLowerCase() as any)}
             </span>
           </div>
         </div>
