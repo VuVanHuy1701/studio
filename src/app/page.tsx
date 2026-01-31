@@ -26,11 +26,11 @@ function DashboardContent() {
   const completedWeekly = weeklyTasks.filter(t => t.completed).length;
 
   return (
-    <div className="min-h-screen pb-24 md:pt-20">
+    <div className="min-h-screen pb-32">
       <Navbar />
       
       <main className="max-w-screen-md mx-auto px-4 py-8 space-y-8">
-        <header className="space-y-2 text-center md:text-left">
+        <header className="space-y-2 text-center md:text-left pt-4">
           <h1 className="text-4xl font-bold text-primary tracking-tight">{t('todaysCompass')}</h1>
           <p className="text-muted-foreground">{format(new Date(), 'EEEE, MMMM do')}</p>
         </header>
