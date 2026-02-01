@@ -1,21 +1,26 @@
+
 "use client";
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Compass, CheckCircle2, BarChart3, Moon, Sun, Globe } from 'lucide-react';
+import { Compass, CheckCircle2, BarChart3, Moon, Sun, Globe, LogIn, LogOut, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSettings } from '@/app/context/SettingsContext';
+import { useAuth } from '@/app/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export function Navbar() {
   const pathname = usePathname();
   const { theme, toggleTheme, language, setLanguage, t } = useSettings();
+  const { user, loginWithGoogle, logout } = useAuth();
 
   const navItems = [
     { name: t('myTasks'), href: '/tasks', icon: CheckCircle2 },
@@ -49,27 +54,87 @@ export function Navbar() {
         </div>
 
         <div className="flex items-center gap-1 border-l pl-4 ml-2">
-          <Button variant="ghost" size="icon" onClick={toggleTheme} className="rounded-full w-9 h-9">
-            {theme === 'light' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
-          </Button>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="rounded-full w-9 h-9">
-                <Globe className="w-4 h-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="rounded-xl border-muted">
-              <DropdownMenuItem onClick={() => setLanguage('en')} className={cn("rounded-lg", language === 'en' && "bg-primary/10 text-primary")}>
-                English
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setLanguage('vi')} className={cn("rounded-lg", language === 'vi' && "bg-primary/10 text-primary")}>
-                Tiếng Việt
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-9 w-9 rounded-full p-0">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={user.photoURL || undefined} alt={user.displayName || ""} />
+                    <AvatarFallback><User className="w-4 h-4" /></AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56 rounded-xl">
+                <div className="flex items-center justify-start gap-2 p-2">
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium leading-none">{user.displayName}</p>
+                    <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
+                  </div>
+                </div>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={toggleTheme} className="rounded-lg">
+                  {theme === 'light' ? <Moon className="mr-2 h-4 w-4" /> : <Sun className="mr-2 h-4 w-4" />}
+                  <span>Theme</span>
+                </DropdownMenuItem>
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger className="rounded-lg">
+                    <Globe className="mr-2 h-4 w-4" />
+                    <span>Language</span>
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuPortal>
+                    <DropdownMenuSubContent className="rounded-xl">
+                      <DropdownMenuItem onClick={() => setLanguage('en')} className={cn("rounded-lg", language === 'en' && "bg-primary/10 text-primary")}>
+                        English
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setLanguage('vi')} className={cn("rounded-lg", language === 'vi' && "bg-primary/10 text-primary")}>
+                        Tiếng Việt
+                      </DropdownMenuItem>
+                    </DropdownMenuSubContent>
+                  </DropdownMenuPortal>
+                </DropdownMenuSub>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={logout} className="rounded-lg text-destructive">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>{t('logout')}</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="rounded-full w-9 h-9">
+                  <User className="w-4 h-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="rounded-xl">
+                <DropdownMenuItem onClick={loginWithGoogle} className="rounded-lg font-bold text-primary">
+                  <LogIn className="mr-2 h-4 w-4" />
+                  {t('login')}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={toggleTheme} className="rounded-lg">
+                  {theme === 'light' ? <Moon className="mr-2 h-4 w-4" /> : <Sun className="mr-2 h-4 w-4" />}
+                  <span>Theme</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setLanguage('en')} className={cn("rounded-lg", language === 'en' && "bg-primary/10 text-primary")}>
+                  English
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setLanguage('vi')} className={cn("rounded-lg", language === 'vi' && "bg-primary/10 text-primary")}>
+                  Tiếng Việt
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
       </div>
     </nav>
   );
 }
+
+// Re-importing DropdownMenuSub etc to fix the Navbar code
+import {
+  DropdownMenuPortal,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+} from "@/components/ui/dropdown-menu";

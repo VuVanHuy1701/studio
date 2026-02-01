@@ -1,3 +1,4 @@
+
 export const translations = {
   en: {
     appName: 'Task Compass',
@@ -55,6 +56,9 @@ export const translations = {
     connected: 'Connected to local storage',
     importSuccess: 'Database imported successfully!',
     importError: 'Failed to import database.',
+    login: 'Login with Google',
+    logout: 'Logout',
+    welcome: 'Welcome',
   },
   vi: {
     appName: 'La Bàn Công Việc',
@@ -112,6 +116,9 @@ export const translations = {
     connected: 'Đã kết nối bộ nhớ nội bộ',
     importSuccess: 'Đã nhập dữ liệu thành công!',
     importError: 'Lỗi khi nhập dữ liệu.',
+    login: 'Đăng nhập Google',
+    logout: 'Đăng xuất',
+    welcome: 'Chào mừng',
   }
 };
 

@@ -1,7 +1,9 @@
+
 import type {Metadata} from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { SettingsProvider } from '@/app/context/SettingsContext';
+import { AuthProvider } from '@/app/context/AuthContext';
 
 export const metadata: Metadata = {
   title: 'Task Compass - Navigate Your Day',
@@ -21,10 +23,12 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=PT+Sans:wght@400;700&display=swap" rel="stylesheet" />
       </head>
       <body className="font-body antialiased bg-background text-foreground min-h-screen">
-        <SettingsProvider>
-          {children}
-          <Toaster />
-        </SettingsProvider>
+        <AuthProvider>
+          <SettingsProvider>
+            {children}
+            <Toaster />
+          </SettingsProvider>
+        </AuthProvider>
       </body>
     </html>
   );
