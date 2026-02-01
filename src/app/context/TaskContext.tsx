@@ -9,6 +9,8 @@ interface TaskContextType {
   toggleTask: (id: string) => void;
   deleteTask: (id: string) => void;
   getOverdueTasks: () => Task[];
+  exportTasks: () => void;
+  importTasks: (file: File) => Promise<boolean>;
 }
 
 const TaskContext = createContext<TaskContextType | undefined>(undefined);
@@ -56,8 +58,48 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
     return tasks.filter(task => !task.completed && task.dueDate < now);
   };
 
+  const exportTasks = () => {
+    const dataStr = JSON.stringify(tasks, null, 2);
+    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+    
+    const exportFileDefaultName = `task-compass-backup-${new Date().toISOString().split('T')[0]}.json`;
+    
+    const linkElement = document.createElement('a');
+    linkElement.setAttribute('href', dataUri);
+    linkElement.setAttribute('download', exportFileDefaultName);
+    linkElement.click();
+  };
+
+  const importTasks = async (file: File): Promise<boolean> => {
+    try {
+      const text = await file.text();
+      const importedTasks = JSON.parse(text);
+      
+      if (Array.isArray(importedTasks)) {
+        const validatedTasks = importedTasks.map((t: any) => ({
+          ...t,
+          dueDate: new Date(t.dueDate)
+        }));
+        setTasks(validatedTasks);
+        return true;
+      }
+      return false;
+    } catch (e) {
+      console.error("Import failed", e);
+      return false;
+    }
+  };
+
   return (
-    <TaskContext.Provider value={{ tasks, addTask, toggleTask, deleteTask, getOverdueTasks }}>
+    <TaskContext.Provider value={{ 
+      tasks, 
+      addTask, 
+      toggleTask, 
+      deleteTask, 
+      getOverdueTasks,
+      exportTasks,
+      importTasks
+    }}>
       {children}
     </TaskContext.Provider>
   );
@@ -71,7 +113,6 @@ export function useTasks() {
   return context;
 }
 
-// Minimal uuid helper to avoid extra dependency since it is not in package.json
 function uuidv4() {
   return Math.random().toString(36).substring(2, 9);
 }

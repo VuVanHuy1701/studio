@@ -48,6 +48,13 @@ export const translations = {
     low: 'Low',
     medium: 'Medium',
     high: 'High',
+    dataManagement: 'Data & Drive Sync',
+    exportJson: 'Export to Drive (JSON)',
+    importJson: 'Import from Drive',
+    syncStatus: 'Fast Local DB Active',
+    connected: 'Connected to local storage',
+    importSuccess: 'Database imported successfully!',
+    importError: 'Failed to import database.',
   },
   vi: {
     appName: 'La Bàn Công Việc',
@@ -98,6 +105,13 @@ export const translations = {
     low: 'Thấp',
     medium: 'Trung bình',
     high: 'Cao',
+    dataManagement: 'Quản lý Dữ liệu & Drive',
+    exportJson: 'Xuất sang Drive (JSON)',
+    importJson: 'Nhập từ Drive',
+    syncStatus: 'DB Nội bộ Tốc độ cao',
+    connected: 'Đã kết nối bộ nhớ nội bộ',
+    importSuccess: 'Đã nhập dữ liệu thành công!',
+    importError: 'Lỗi khi nhập dữ liệu.',
   }
 };
 

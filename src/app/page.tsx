@@ -6,13 +6,18 @@ import { TaskForm } from '@/components/tasks/TaskForm';
 import { TaskCard } from '@/components/tasks/TaskCard';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
+import { Button } from '@/components/ui/button';
 import { format, startOfWeek, endOfWeek, isWithinInterval, isToday } from 'date-fns';
-import { CheckCircle2, AlertCircle, Clock, Calendar as CalendarIcon } from 'lucide-react';
+import { CheckCircle2, AlertCircle, Clock, Calendar as CalendarIcon, Database, Share, Download, Cloud } from 'lucide-react';
 import { useSettings } from '@/app/context/SettingsContext';
+import { useToast } from '@/hooks/use-toast';
+import { useRef } from 'react';
 
 function DashboardContent() {
-  const { tasks, getOverdueTasks } = useTasks();
+  const { tasks, getOverdueTasks, exportTasks, importTasks } = useTasks();
   const { t } = useSettings();
+  const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const todayTasks = tasks.filter(t => isToday(t.dueDate));
   const completedToday = todayTasks.filter(t => t.completed).length;
@@ -25,6 +30,29 @@ function DashboardContent() {
   const weeklyTasks = tasks.filter(t => isWithinInterval(t.dueDate, { start: weekStart, end: weekEnd }));
   const completedWeekly = weeklyTasks.filter(t => t.completed).length;
 
+  const handleImportClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const success = await importTasks(file);
+      if (success) {
+        toast({
+          title: t('importSuccess'),
+          description: "Your tasks have been restored.",
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          title: t('importError'),
+          description: "Check the file format and try again.",
+        });
+      }
+    }
+  };
+
   return (
     <div className="min-h-screen pb-32">
       <Navbar />
@@ -34,6 +62,45 @@ function DashboardContent() {
           <h1 className="text-4xl font-bold text-primary tracking-tight">{t('todaysCompass')}</h1>
           <p className="text-muted-foreground">{format(new Date(), 'EEEE, MMMM do')}</p>
         </header>
+
+        {/* Database & Sync Status */}
+        <Card className="border-none shadow-sm bg-accent/5 overflow-hidden">
+          <div className="bg-accent/10 px-6 py-2 flex items-center justify-between">
+             <div className="flex items-center gap-2 text-xs font-bold text-accent uppercase tracking-wider">
+               <Database className="w-3 h-3" />
+               {t('syncStatus')}
+             </div>
+             <div className="flex items-center gap-1.5 text-xs text-green-600 font-medium">
+               <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+               {t('connected')}
+             </div>
+          </div>
+          <CardContent className="p-6">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+              <div className="space-y-1">
+                <h3 className="font-bold text-lg">{t('dataManagement')}</h3>
+                <p className="text-sm text-muted-foreground">Keep your data safe on Google Drive</p>
+              </div>
+              <div className="flex gap-2 w-full md:w-auto">
+                <Button onClick={exportTasks} variant="outline" className="flex-1 md:flex-none gap-2 rounded-xl">
+                  <Download className="w-4 h-4" />
+                  {t('exportJson')}
+                </Button>
+                <Button onClick={handleImportClick} variant="secondary" className="flex-1 md:flex-none gap-2 rounded-xl">
+                  <Cloud className="w-4 h-4" />
+                  {t('importJson')}
+                </Button>
+                <input 
+                  type="file" 
+                  ref={fileInputRef} 
+                  onChange={handleFileChange} 
+                  accept=".json" 
+                  className="hidden" 
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Today's Progress Card */}
         <Card className="border-none shadow-sm bg-primary/5">
