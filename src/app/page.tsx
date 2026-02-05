@@ -1,3 +1,4 @@
+
 "use client";
 
 import { TaskProvider, useTasks } from '@/app/context/TaskContext';
@@ -8,7 +9,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { format, startOfWeek, endOfWeek, isWithinInterval, isToday } from 'date-fns';
-import { CheckCircle2, AlertCircle, Clock, Calendar as CalendarIcon, Database, Share, Download, Cloud } from 'lucide-react';
+import { CheckCircle2, AlertCircle, Clock, Calendar as CalendarIcon, Database, Download, Cloud } from 'lucide-react';
 import { useSettings } from '@/app/context/SettingsContext';
 import { useToast } from '@/hooks/use-toast';
 import { useRef } from 'react';
@@ -62,45 +63,6 @@ function DashboardContent() {
           <h1 className="text-4xl font-bold text-primary tracking-tight">{t('todaysCompass')}</h1>
           <p className="text-muted-foreground">{format(new Date(), 'EEEE, MMMM do')}</p>
         </header>
-
-        {/* Database & Sync Status */}
-        <Card className="border-none shadow-sm bg-accent/5 overflow-hidden">
-          <div className="bg-accent/10 px-6 py-2 flex items-center justify-between">
-             <div className="flex items-center gap-2 text-xs font-bold text-accent uppercase tracking-wider">
-               <Database className="w-3 h-3" />
-               {t('syncStatus')}
-             </div>
-             <div className="flex items-center gap-1.5 text-xs text-green-600 font-medium">
-               <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-               {t('connected')}
-             </div>
-          </div>
-          <CardContent className="p-6">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-              <div className="space-y-1">
-                <h3 className="font-bold text-lg">{t('dataManagement')}</h3>
-                <p className="text-sm text-muted-foreground">Keep your data safe on Google Drive</p>
-              </div>
-              <div className="flex gap-2 w-full md:w-auto">
-                <Button onClick={exportTasks} variant="outline" className="flex-1 md:flex-none gap-2 rounded-xl">
-                  <Download className="w-4 h-4" />
-                  {t('exportJson')}
-                </Button>
-                <Button onClick={handleImportClick} variant="secondary" className="flex-1 md:flex-none gap-2 rounded-xl">
-                  <Cloud className="w-4 h-4" />
-                  {t('importJson')}
-                </Button>
-                <input 
-                  type="file" 
-                  ref={fileInputRef} 
-                  onChange={handleFileChange} 
-                  accept=".json" 
-                  className="hidden" 
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
 
         {/* Today's Progress Card */}
         <Card className="border-none shadow-sm bg-primary/5">
@@ -187,6 +149,45 @@ function DashboardContent() {
             )}
           </div>
         </section>
+
+        {/* Database & Sync Status - Moved to bottom */}
+        <Card className="border-none shadow-sm bg-accent/5 overflow-hidden">
+          <div className="bg-accent/10 px-6 py-2 flex items-center justify-between">
+             <div className="flex items-center gap-2 text-xs font-bold text-accent uppercase tracking-wider">
+               <Database className="w-3 h-3" />
+               {t('syncStatus')}
+             </div>
+             <div className="flex items-center gap-1.5 text-xs text-green-600 font-medium">
+               <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+               {t('connected')}
+             </div>
+          </div>
+          <CardContent className="p-6">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+              <div className="space-y-1">
+                <h3 className="font-bold text-lg">{t('dataManagement')}</h3>
+                <p className="text-sm text-muted-foreground">Keep your data safe on Google Drive</p>
+              </div>
+              <div className="flex gap-2 w-full md:w-auto">
+                <Button onClick={exportTasks} variant="outline" className="flex-1 md:flex-none gap-2 rounded-xl">
+                  <Download className="w-4 h-4" />
+                  {t('exportJson')}
+                </Button>
+                <Button onClick={handleImportClick} variant="secondary" className="flex-1 md:flex-none gap-2 rounded-xl">
+                  <Cloud className="w-4 h-4" />
+                  {t('importJson')}
+                </Button>
+                <input 
+                  type="file" 
+                  ref={fileInputRef} 
+                  onChange={handleFileChange} 
+                  accept=".json" 
+                  className="hidden" 
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </main>
 
       <TaskForm />
