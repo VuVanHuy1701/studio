@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -9,16 +10,18 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, Calendar as CalendarIcon } from 'lucide-react';
+import { Plus, Calendar as CalendarIcon, UserPlus } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useSettings } from '@/app/context/SettingsContext';
+import { useAuth } from '@/app/context/AuthContext';
 
 export function TaskForm() {
   const { addTask } = useTasks();
   const { t } = useSettings();
+  const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -26,6 +29,7 @@ export function TaskForm() {
   const [priority, setPriority] = useState<Task['priority']>('Medium');
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [time, setTime] = useState('12:00');
+  const [assignedTo, setAssignedTo] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,11 +45,14 @@ export function TaskForm() {
       category,
       dueDate,
       completed: false,
-      priority
+      priority,
+      assignedTo: user?.role === 'admin' ? assignedTo : user?.displayName || user?.email || 'Me',
+      createdBy: user?.uid
     });
 
     setTitle('');
     setDescription('');
+    setAssignedTo('');
     setOpen(false);
   };
 
@@ -55,13 +62,13 @@ export function TaskForm() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="fixed bottom-20 right-4 md:bottom-8 md:right-8 h-14 w-14 rounded-full shadow-lg z-50">
+        <Button className="fixed bottom-24 right-4 md:bottom-8 md:right-8 h-14 w-14 rounded-full shadow-lg z-50">
           <Plus className="w-8 h-8" />
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>{t('newTask')}</DialogTitle>
+          <DialogTitle>{user?.role === 'admin' ? 'Assign New Task' : t('newTask')}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 pt-4">
           <div className="space-y-2">
@@ -74,6 +81,21 @@ export function TaskForm() {
               required
             />
           </div>
+
+          {user?.role === 'admin' && (
+            <div className="space-y-2">
+              <Label htmlFor="assign" className="flex items-center gap-2">
+                <UserPlus className="w-4 h-4" />
+                Assign to User
+              </Label>
+              <Input 
+                id="assign" 
+                placeholder="User email or name..." 
+                value={assignedTo}
+                onChange={(e) => setAssignedTo(e.target.value)}
+              />
+            </div>
+          )}
           
           <div className="space-y-2">
             <Label htmlFor="description">{t('description')}</Label>
@@ -117,7 +139,7 @@ export function TaskForm() {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>{t('date')}</Label>
+              <Label>{t('date')} & Deadline</Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
@@ -153,7 +175,7 @@ export function TaskForm() {
           </div>
 
           <Button type="submit" className="w-full bg-accent text-accent-foreground hover:bg-accent/90">
-            {t('createTask')}
+            {user?.role === 'admin' ? 'Assign Task' : t('createTask')}
           </Button>
         </form>
       </DialogContent>

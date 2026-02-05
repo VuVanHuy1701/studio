@@ -1,7 +1,9 @@
+
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Task } from '@/app/lib/types';
+import { useAuth } from '@/app/context/AuthContext';
 
 interface TaskContextType {
   tasks: Task[];
@@ -18,6 +20,7 @@ const TaskContext = createContext<TaskContextType | undefined>(undefined);
 export function TaskProvider({ children }: { children: React.ReactNode }) {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isHydrated, setIsHydrated] = useState(false);
+  const { user } = useAuth();
 
   useEffect(() => {
     const savedTasks = localStorage.getItem('task_compass_tasks');
@@ -55,7 +58,12 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
 
   const getOverdueTasks = () => {
     const now = new Date();
-    return tasks.filter(task => !task.completed && task.dueDate < now);
+    // Filter tasks based on role: admins see all, users see assigned or created by them
+    const visibleTasks = user?.role === 'admin' 
+      ? tasks 
+      : tasks.filter(t => !t.assignedTo || t.assignedTo === user?.displayName || t.assignedTo === user?.email || t.createdBy === user?.uid);
+      
+    return visibleTasks.filter(task => !task.completed && new Date(task.dueDate) < now);
   };
 
   const exportTasks = () => {
