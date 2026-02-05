@@ -1,10 +1,13 @@
+
 import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
+import { AuthProvider } from '@/app/context/AuthContext';
+import { SettingsProvider } from '@/app/context/SettingsContext';
 
 export const metadata: Metadata = {
-  title: 'Firebase Studio Starter',
-  description: 'Built with Next.js, ShadCN, and Genkit',
+  title: 'Task Compass',
+  description: 'Navigate your productivity with precision',
 };
 
 export default function RootLayout({
@@ -15,8 +18,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="antialiased min-h-screen bg-background">
-        {children}
-        <Toaster />
+        <AuthProvider>
+          <SettingsProvider>
+            {children}
+            <Toaster />
+          </SettingsProvider>
+        </AuthProvider>
       </body>
     </html>
   );
