@@ -22,6 +22,7 @@ import { useSettings } from '@/app/context/SettingsContext';
 import { useAuth } from '@/app/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { useRef } from 'react';
+import Link from 'next/link';
 
 function DashboardContent() {
   const { tasks, getOverdueTasks, exportTasks, importTasks } = useTasks();
@@ -109,8 +110,10 @@ function DashboardContent() {
               <Calendar className="w-5 h-5 text-primary" />
               {t('upcomingToday')}
             </h2>
-            <Button variant="ghost" size="sm" className="text-primary font-bold">
-              View All <ArrowRight className="ml-2 w-4 h-4" />
+            <Button variant="ghost" size="sm" className="text-primary font-bold" asChild>
+              <Link href="/tasks">
+                View All <ArrowRight className="ml-2 w-4 h-4" />
+              </Link>
             </Button>
           </div>
 
