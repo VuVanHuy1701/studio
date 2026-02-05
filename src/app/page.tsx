@@ -9,14 +9,16 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { format, startOfWeek, endOfWeek, isWithinInterval, isToday } from 'date-fns';
-import { CheckCircle2, AlertCircle, Clock, Calendar as CalendarIcon, Database, Download, Cloud } from 'lucide-react';
+import { CheckCircle2, AlertCircle, Clock, Calendar as CalendarIcon, Database, Download, Cloud, LogIn } from 'lucide-react';
 import { useSettings } from '@/app/context/SettingsContext';
+import { useAuth } from '@/app/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { useRef } from 'react';
 
 function DashboardContent() {
   const { tasks, getOverdueTasks, exportTasks, importTasks } = useTasks();
   const { t } = useSettings();
+  const { user, loginWithGoogle } = useAuth();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
@@ -59,10 +61,27 @@ function DashboardContent() {
       <Navbar />
       
       <main className="max-w-screen-md mx-auto px-4 py-8 space-y-8">
-        <header className="space-y-2 text-center md:text-left pt-4">
-          <h1 className="text-4xl font-bold text-primary tracking-tight">{t('todaysCompass')}</h1>
-          <p className="text-muted-foreground">{format(new Date(), 'EEEE, MMMM do')}</p>
-        </header>
+        {!user ? (
+          <header className="space-y-6 text-center py-12 px-6 bg-primary/5 rounded-3xl border border-primary/10">
+            <div className="space-y-2">
+              <h1 className="text-4xl font-bold text-primary tracking-tight">{t('appName')}</h1>
+              <p className="text-muted-foreground text-lg max-w-sm mx-auto">
+                Navigate your day with clarity. Sign in to sync your tasks across devices.
+              </p>
+            </div>
+            <Button onClick={loginWithGoogle} size="lg" className="rounded-full px-8 gap-2 bg-primary hover:bg-primary/90">
+              <LogIn className="w-5 h-5" />
+              {t('login')}
+            </Button>
+          </header>
+        ) : (
+          <header className="space-y-2 text-center md:text-left pt-4">
+            <h1 className="text-4xl font-bold text-primary tracking-tight">
+              {t('welcome')}, {user.displayName?.split(' ')[0]}
+            </h1>
+            <p className="text-muted-foreground">{format(new Date(), 'EEEE, MMMM do')}</p>
+          </header>
+        )}
 
         {/* Today's Progress Card */}
         <Card className="border-none shadow-sm bg-primary/5">
@@ -150,7 +169,7 @@ function DashboardContent() {
           </div>
         </section>
 
-        {/* Database & Sync Status - Moved to bottom */}
+        {/* Database & Sync Status */}
         <Card className="border-none shadow-sm bg-accent/5 overflow-hidden">
           <div className="bg-accent/10 px-6 py-2 flex items-center justify-between">
              <div className="flex items-center gap-2 text-xs font-bold text-accent uppercase tracking-wider">
