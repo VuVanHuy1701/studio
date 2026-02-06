@@ -28,6 +28,7 @@ import { useSettings } from '@/app/context/SettingsContext';
 import { useAuth } from '@/app/context/AuthContext';
 import { TaskForm } from './TaskForm';
 import { useState, useEffect } from 'react';
+import { useToast } from '@/hooks/use-toast';
 import {
   Dialog,
   DialogContent,
@@ -50,6 +51,7 @@ export function TaskCard({ task }: TaskCardProps) {
   const { toggleTask, deleteTask, updateTask } = useTasks();
   const { t } = useSettings();
   const { user } = useAuth();
+  const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
   const [progressDialogOpen, setProgressDialogOpen] = useState(false);
   const [notes, setNotes] = useState(task.notes || '');
@@ -103,6 +105,7 @@ export function TaskCard({ task }: TaskCardProps) {
         setProgressDialogOpen(true);
       } else {
         toggleTask(task.id);
+        toast({ title: "Task Completed" });
       }
     } else {
       toggleTask(task.id);
@@ -112,6 +115,7 @@ export function TaskCard({ task }: TaskCardProps) {
   const handleMarkComplete = () => {
     updateTask(task.id, { completed: true });
     setProgressDialogOpen(false);
+    toast({ title: "Task Completed" });
   };
 
   const handleNotCompleted = () => {
