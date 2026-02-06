@@ -38,7 +38,6 @@ import {
   AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
-  AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
@@ -281,16 +280,17 @@ export function TaskCard({ task }: TaskCardProps) {
       </Card>
 
       <AlertDialog open={confirmCompleteOpen} onOpenChange={setConfirmCompleteOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent className="sm:max-w-[400px]">
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure you want to finish the task?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will mark the task as completed. You can undo this action later if needed.
-            </AlertDialogDescription>
+            <AlertDialogTitle className="text-center text-xl">Are you sure you want to finish the task?</AlertDialogTitle>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>No</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmCompletion}>Yes</AlertDialogAction>
+          <AlertDialogFooter className="flex-col sm:flex-col gap-3 mt-4">
+            <AlertDialogAction onClick={handleConfirmCompletion} className="w-full h-12 text-base font-semibold">
+              Yes
+            </AlertDialogAction>
+            <AlertDialogCancel className="w-full h-12 text-base mt-0 border-muted-foreground/20">
+              No
+            </AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
