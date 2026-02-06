@@ -22,12 +22,19 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// --- CREDENTIALS CONFIGURATION ---
+const ADMIN_CREDENTIALS = {
+  username: 'admin',
+  password: 'admin@123'
+};
+
 const MOCK_USERS = [
   { name: 'Alice', id: 'mock-alice' },
   { name: 'Bob', id: 'mock-bob' },
   { name: 'Charlie', id: 'mock-charlie' },
   { name: 'Dana', id: 'mock-dana' },
 ];
+// ---------------------------------
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AppUser | null>(null);
@@ -77,7 +84,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const loginAsAdmin = async (username: string, password: string): Promise<boolean> => {
-    if (username === 'admin' && password === 'admin@123') {
+    if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
       const adminUser: AppUser = {
         uid: 'admin-id',
         email: 'admin@taskcompass.com',
