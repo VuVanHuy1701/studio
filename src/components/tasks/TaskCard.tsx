@@ -33,15 +33,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Tooltip,
@@ -60,7 +51,6 @@ export function TaskCard({ task }: TaskCardProps) {
   const { user } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [progressDialogOpen, setProgressDialogOpen] = useState(false);
-  const [confirmCompleteOpen, setConfirmCompleteOpen] = useState(false);
   const [notes, setNotes] = useState(task.notes || '');
   const [showNotesInput, setShowNotesInput] = useState(false);
   const [isUrgentDeadline, setIsUrgentDeadline] = useState(false);
@@ -106,22 +96,16 @@ export function TaskCard({ task }: TaskCardProps) {
     if (!canToggle) return;
 
     if (!task.completed) {
-      // Show confirmation before finishing
-      setConfirmCompleteOpen(true);
+      // When marking as complete
+      if (isAdminCreated && !isAdmin && isLead) {
+        // Administrator tasks require a progress review if completed by a lead
+        setProgressDialogOpen(true);
+      } else {
+        // Personal tasks or admin direct actions toggle immediately
+        toggleTask(task.id);
+      }
     } else {
-      // Un-completing doesn't need confirmation
-      toggleTask(task.id);
-    }
-  };
-
-  const handleConfirmCompletion = () => {
-    setConfirmCompleteOpen(false);
-    
-    if (isAdminCreated && !isAdmin && isLead) {
-      // Administrator tasks require a progress review if completed by a lead
-      setProgressDialogOpen(true);
-    } else {
-      // Personal tasks or admin direct actions toggle immediately
+      // Un-completing doesn't need any dialog
       toggleTask(task.id);
     }
   };
@@ -278,22 +262,6 @@ export function TaskCard({ task }: TaskCardProps) {
           </div>
         </CardContent>
       </Card>
-
-      <AlertDialog open={confirmCompleteOpen} onOpenChange={setConfirmCompleteOpen}>
-        <AlertDialogContent className="sm:max-w-[400px]">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="text-center text-xl">Are you sure you want to finish the task?</AlertDialogTitle>
-          </AlertDialogHeader>
-          <AlertDialogFooter className="flex-col sm:flex-col gap-3 mt-4">
-            <AlertDialogAction onClick={handleConfirmCompletion} className="w-full h-12 text-base font-semibold">
-              Yes
-            </AlertDialogAction>
-            <AlertDialogCancel className="w-full h-12 text-base mt-0 border-muted-foreground/20">
-              No
-            </AlertDialogCancel>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
 
       <Dialog open={progressDialogOpen} onOpenChange={setProgressDialogOpen}>
         <DialogContent className="sm:max-w-[400px]">
