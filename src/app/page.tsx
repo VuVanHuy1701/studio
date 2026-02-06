@@ -15,7 +15,9 @@ import {
   Download, 
   Upload, 
   Database,
-  ArrowRight
+  ArrowRight,
+  ShieldCheck,
+  User
 } from 'lucide-react';
 import { format, isToday } from 'date-fns';
 import { useSettings } from '@/app/context/SettingsContext';
@@ -31,7 +33,10 @@ function DashboardContent() {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const todayTasks = tasks.filter(t => isToday(t.dueDate));
+  const todayTasks = tasks.filter(t => isToday(new Date(t.dueDate)));
+  const adminTasks = todayTasks.filter(t => t.createdBy === 'admin-id');
+  const personalTasks = todayTasks.filter(t => t.createdBy !== 'admin-id');
+  
   const completedToday = todayTasks.filter(t => t.completed).length;
   const totalToday = todayTasks.length;
   const progress = totalToday > 0 ? (completedToday / totalToday) * 100 : 0;
@@ -104,7 +109,7 @@ function DashboardContent() {
           </Card>
         </section>
 
-        <section className="space-y-4">
+        <section className="space-y-6">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-bold flex items-center gap-2">
               <Calendar className="w-5 h-5 text-primary" />
@@ -117,21 +122,53 @@ function DashboardContent() {
             </Button>
           </div>
 
-          <div className="grid gap-3">
-            {todayTasks.length > 0 ? (
-              todayTasks
-                .sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime())
-                .map(task => (
-                <TaskCard key={task.id} task={task} />
-              ))
-            ) : (
-              <div className="text-center py-12 bg-white rounded-xl border border-dashed text-muted-foreground flex flex-col items-center gap-2">
-                <CheckCircle2 className="w-8 h-8 opacity-20" />
-                <p>{t('noTasksToday')}</p>
-                <p className="text-xs">{t('enjoyClearDay')}</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Column 1: Admin Tasks */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 border-b pb-2">
+                <ShieldCheck className="w-4 h-4 text-accent" />
+                <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Admin Assigned</h3>
               </div>
-            )}
+              <div className="grid gap-3">
+                {adminTasks.length > 0 ? (
+                  adminTasks
+                    .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
+                    .map(task => (
+                    <TaskCard key={task.id} task={task} />
+                  ))
+                ) : (
+                  <p className="text-xs text-muted-foreground italic py-4 text-center border rounded-lg border-dashed">No admin tasks today</p>
+                )}
+              </div>
+            </div>
+
+            {/* Column 2: User Tasks */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 border-b pb-2">
+                <User className="w-4 h-4 text-primary" />
+                <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Personal Tasks</h3>
+              </div>
+              <div className="grid gap-3">
+                {personalTasks.length > 0 ? (
+                  personalTasks
+                    .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
+                    .map(task => (
+                    <TaskCard key={task.id} task={task} />
+                  ))
+                ) : (
+                  <p className="text-xs text-muted-foreground italic py-4 text-center border rounded-lg border-dashed">No personal tasks today</p>
+                )}
+              </div>
+            </div>
           </div>
+
+          {todayTasks.length === 0 && (
+            <div className="text-center py-12 bg-white rounded-xl border border-dashed text-muted-foreground flex flex-col items-center gap-2">
+              <CheckCircle2 className="w-8 h-8 opacity-20" />
+              <p>{t('noTasksToday')}</p>
+              <p className="text-xs">{t('enjoyClearDay')}</p>
+            </div>
+          )}
         </section>
 
         <section className="pt-8">
