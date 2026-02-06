@@ -34,6 +34,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface TaskCardProps {
   task: Task;
@@ -85,14 +91,20 @@ export function TaskCard({ task }: TaskCardProps) {
   
   const canDelete = isAdmin || isOwner;
   const canEdit = isAdmin || isOwner;
+  
+  // Only the lead or an admin can toggle status for admin-created tasks
+  const canToggle = !isAdminCreated || isLead || isAdmin;
 
   const handleToggle = () => {
+    if (!canToggle) return;
+
     if (isAdminCreated && !task.completed && !isAdmin) {
       // If user is lead, they show the progress review
       if (isLead) {
         setProgressDialogOpen(true);
       } else {
-        // If not lead, standard toggle (but usually we'd want them to see status only)
+        // This block should technically not be reachable if canToggle is correct, 
+        // but it's here for safety.
         toggleTask(task.id);
       }
     } else {
@@ -125,11 +137,28 @@ export function TaskCard({ task }: TaskCardProps) {
       )}>
         <CardContent className="p-4 flex items-start gap-4">
           <div className="pt-1">
-            <Checkbox 
-              checked={task.completed} 
-              onCheckedChange={handleToggle}
-              className="w-5 h-5 rounded-full"
-            />
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div>
+                    <Checkbox 
+                      checked={task.completed} 
+                      onCheckedChange={handleToggle}
+                      disabled={!canToggle}
+                      className={cn(
+                        "w-5 h-5 rounded-full",
+                        !canToggle && "opacity-50 cursor-not-allowed"
+                      )}
+                    />
+                  </div>
+                </TooltipTrigger>
+                {!canToggle && (
+                  <TooltipContent>
+                    <p className="text-xs">Only the Lead Assignee ({leadAssignee}) can complete this task.</p>
+                  </TooltipContent>
+                )}
+              </Tooltip>
+            </TooltipProvider>
           </div>
           
           <div className="flex-1 space-y-1">
