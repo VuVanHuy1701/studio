@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useTasks } from '@/app/context/TaskContext';
 import { Category, Task } from '@/app/lib/types';
 import { Button } from '@/components/ui/button';
@@ -9,13 +9,14 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, Calendar as CalendarIcon, UserPlus, Save, Search } from 'lucide-react';
+import { Plus, Calendar as CalendarIcon, UserPlus, Save, Search, User, Check } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useSettings } from '@/app/context/SettingsContext';
 import { useAuth } from '@/app/context/AuthContext';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface TaskFormProps {
   taskToEdit?: Task;
@@ -39,6 +40,13 @@ export function TaskForm({ taskToEdit, open: externalOpen, onOpenChange: setExte
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [time, setTime] = useState('12:00');
   const [assignedTo, setAssignedTo] = useState('');
+  const [userSearch, setUserSearch] = useState('');
+
+  const filteredUsers = useMemo(() => {
+    const search = userSearch.toLowerCase().trim();
+    if (!search) return knownUsers;
+    return knownUsers.filter(u => u.name.toLowerCase().includes(search));
+  }, [userSearch, knownUsers]);
 
   useEffect(() => {
     if (taskToEdit && open) {
@@ -49,6 +57,10 @@ export function TaskForm({ taskToEdit, open: externalOpen, onOpenChange: setExte
       setDate(new Date(taskToEdit.dueDate));
       setTime(format(new Date(taskToEdit.dueDate), 'HH:mm'));
       setAssignedTo(taskToEdit.assignedTo || '');
+      setUserSearch('');
+    } else if (!taskToEdit && open) {
+      // Reset search when opening for a new task
+      setUserSearch('');
     }
   }, [taskToEdit, open]);
 
@@ -121,22 +133,66 @@ export function TaskForm({ taskToEdit, open: externalOpen, onOpenChange: setExte
           </div>
 
           {user?.role === 'admin' && (
-            <div className="space-y-2">
-              <Label htmlFor="assign" className="flex items-center gap-2">
-                <UserPlus className="w-4 h-4" />
-                Assign to User
+            <div className="space-y-3 bg-muted/30 p-3 rounded-lg border border-dashed">
+              <Label className="flex items-center gap-2 mb-1">
+                <UserPlus className="w-4 h-4 text-primary" />
+                Find & Assign User
               </Label>
-              <Select value={assignedTo} onValueChange={setAssignedTo}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select a user to assign..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Me">Assign to Me (Admin)</SelectItem>
-                  {knownUsers.map(u => (
-                    <SelectItem key={u.id} value={u.name}>{u.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="relative">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Type name to search..."
+                  className="pl-9 bg-background"
+                  value={userSearch}
+                  onChange={(e) => setUserSearch(e.target.value)}
+                />
+              </div>
+              <ScrollArea className="h-32 rounded-md border bg-background">
+                <div className="p-1 space-y-1">
+                  <button
+                    type="button"
+                    onClick={() => setAssignedTo('Me')}
+                    className={cn(
+                      "w-full flex items-center justify-between px-3 py-2 text-sm rounded-md transition-colors",
+                      assignedTo === 'Me' ? "bg-primary text-primary-foreground font-bold" : "hover:bg-muted"
+                    )}
+                  >
+                    <div className="flex items-center gap-2">
+                      <User className="w-3.5 h-3.5" />
+                      Me (Admin)
+                    </div>
+                    {assignedTo === 'Me' && <Check className="w-4 h-4" />}
+                  </button>
+                  {filteredUsers.length > 0 ? (
+                    filteredUsers.map(u => (
+                      <button
+                        key={u.id}
+                        type="button"
+                        onClick={() => setAssignedTo(u.name)}
+                        className={cn(
+                          "w-full flex items-center justify-between px-3 py-2 text-sm rounded-md transition-colors",
+                          assignedTo === u.name ? "bg-primary text-primary-foreground font-bold" : "hover:bg-muted"
+                        )}
+                      >
+                        <div className="flex items-center gap-2">
+                          <User className="w-3.5 h-3.5" />
+                          {u.name}
+                        </div>
+                        {assignedTo === u.name && <Check className="w-4 h-4" />}
+                      </button>
+                    ))
+                  ) : (
+                    <div className="text-center py-4 text-xs text-muted-foreground">
+                      No matching users found.
+                    </div>
+                  )}
+                </div>
+              </ScrollArea>
+              {assignedTo && (
+                <p className="text-[10px] text-primary font-bold uppercase tracking-wider">
+                  Assigned To: <span className="underline">{assignedTo}</span>
+                </p>
+              )}
             </div>
           )}
           
