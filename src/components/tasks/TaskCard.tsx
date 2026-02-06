@@ -32,17 +32,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Tooltip,
@@ -60,7 +50,6 @@ export function TaskCard({ task }: TaskCardProps) {
   const { t } = useSettings();
   const { user } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
-  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [progressDialogOpen, setProgressDialogOpen] = useState(false);
   const [notes, setNotes] = useState(task.notes || '');
   const [showNotesInput, setShowNotesInput] = useState(false);
@@ -92,7 +81,7 @@ export function TaskCard({ task }: TaskCardProps) {
     }
   };
 
-  const isAdminCreated = task.createdBy === 'admin-id';
+  const isAdminCreated = task.createdBy === 'admin-id' || task.createdBy === 'admin';
   const isOwner = task.createdBy === user?.uid;
   const isAdmin = user?.role === 'admin';
   
@@ -107,21 +96,15 @@ export function TaskCard({ task }: TaskCardProps) {
     if (!canToggle) return;
 
     if (!task.completed) {
-      // Show confirmation dialog first
-      setConfirmDialogOpen(true);
+      if (isAdminCreated && !isAdmin && isLead) {
+        // Administrator tasks require a progress review if completed by a lead
+        setProgressDialogOpen(true);
+      } else {
+        // Personal tasks or admin direct actions toggle immediately
+        toggleTask(task.id);
+      }
     } else {
-      // Un-completing doesn't need confirmation
-      toggleTask(task.id);
-    }
-  };
-
-  const handleConfirmYes = () => {
-    setConfirmDialogOpen(false);
-    if (isAdminCreated && !isAdmin && isLead) {
-      // Administrator tasks require a progress review if completed by a lead
-      setProgressDialogOpen(true);
-    } else {
-      // Personal tasks or admin direct actions toggle immediately
+      // Un-completing doesn't need confirmation or review
       toggleTask(task.id);
     }
   };
@@ -278,26 +261,6 @@ export function TaskCard({ task }: TaskCardProps) {
           </div>
         </CardContent>
       </Card>
-
-      {/* Confirmation Dialog */}
-      <AlertDialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
-        <AlertDialogContent className="sm:max-w-[400px]">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="text-center py-4">Are you sure you want to finish the task?</AlertDialogTitle>
-          </AlertDialogHeader>
-          <AlertDialogFooter className="flex-col sm:flex-col gap-2">
-            <AlertDialogAction 
-              onClick={handleConfirmYes}
-              className="w-full bg-primary text-primary-foreground h-12"
-            >
-              Yes
-            </AlertDialogAction>
-            <AlertDialogCancel className="w-full h-12 mt-0">
-              No
-            </AlertDialogCancel>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
 
       {/* Progress Review Dialog */}
       <Dialog open={progressDialogOpen} onOpenChange={setProgressDialogOpen}>
