@@ -19,7 +19,8 @@ import {
   XCircle,
   AlertTriangle,
   Users,
-  AlertCircle
+  AlertCircle,
+  CalendarClock
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTasks } from '@/app/context/TaskContext';
@@ -204,6 +205,13 @@ export function TaskCard({ task }: TaskCardProps) {
               <p className="text-sm text-muted-foreground line-clamp-2">
                 {task.description}
               </p>
+            )}
+
+            {task.additionalTimeAllocated && !task.completed && (
+              <div className="mt-2 flex items-center gap-2 p-2 rounded bg-accent/10 border border-accent/30 text-[10px] font-bold text-accent animate-in fade-in slide-in-from-left-2">
+                <CalendarClock className="w-3.5 h-3.5" />
+                <span>{t('additionalTimeMessage')}</span>
+              </div>
             )}
 
             {task.notes && (

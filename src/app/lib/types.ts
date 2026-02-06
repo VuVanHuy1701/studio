@@ -23,6 +23,7 @@ export interface Task {
   assignedTo: string[]; // List of UIDs or Names, ordered by rank
   createdBy?: string;
   notes?: string; // Feedback for uncompleted admin tasks
+  additionalTimeAllocated?: boolean; // New flag for extended deadlines
 }
 
 export interface ProgressStats {

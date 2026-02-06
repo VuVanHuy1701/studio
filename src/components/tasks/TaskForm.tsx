@@ -10,7 +10,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, UserPlus, Save, Search, User, Check, X, Calendar as CalendarIcon } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Plus, UserPlus, Save, Search, User, Check, X, Calendar as CalendarIcon, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useSettings } from '@/app/context/SettingsContext';
@@ -41,6 +42,7 @@ export function TaskForm({ taskToEdit, open: externalOpen, onOpenChange: setExte
   const [time, setTime] = useState('16:30');
   const [assignedUsers, setAssignedUsers] = useState<string[]>([]);
   const [userSearch, setUserSearch] = useState('');
+  const [additionalTimeAllocated, setAdditionalTimeAllocated] = useState(false);
 
   const filteredUsers = useMemo(() => {
     const search = userSearch.toLowerCase().trim();
@@ -57,10 +59,12 @@ export function TaskForm({ taskToEdit, open: externalOpen, onOpenChange: setExte
       setDateString(format(d, 'yyyy-MM-dd'));
       setTime(format(d, 'HH:mm'));
       setAssignedUsers(taskToEdit.assignedTo || []);
+      setAdditionalTimeAllocated(taskToEdit.additionalTimeAllocated || false);
     } else if (!taskToEdit && open) {
       setAssignedUsers(user?.role === 'admin' ? [] : [user?.displayName || 'Me']);
       setDateString(format(new Date(), 'yyyy-MM-dd'));
       setTime('16:30');
+      setAdditionalTimeAllocated(false);
     }
   }, [taskToEdit, open, user]);
 
@@ -94,6 +98,7 @@ export function TaskForm({ taskToEdit, open: externalOpen, onOpenChange: setExte
         dueDate,
         priority,
         assignedTo: finalAssigned,
+        additionalTimeAllocated
       });
     } else {
       addTask({
@@ -104,7 +109,8 @@ export function TaskForm({ taskToEdit, open: externalOpen, onOpenChange: setExte
         completed: false,
         priority,
         assignedTo: finalAssigned,
-        createdBy: user?.uid
+        createdBy: user?.uid,
+        additionalTimeAllocated
       });
     }
 
@@ -288,6 +294,22 @@ export function TaskForm({ taskToEdit, open: externalOpen, onOpenChange: setExte
               />
             </div>
           </div>
+
+          {user?.role === 'admin' && (
+            <div className="flex items-center justify-between p-3 bg-accent/5 rounded-lg border border-accent/20">
+              <div className="flex items-center gap-2">
+                <Clock className="w-4 h-4 text-accent" />
+                <Label htmlFor="extended-time" className="text-sm font-bold text-accent">
+                  {t('additionalTimeLabel')}
+                </Label>
+              </div>
+              <Switch 
+                id="extended-time"
+                checked={additionalTimeAllocated}
+                onCheckedChange={setAdditionalTimeAllocated}
+              />
+            </div>
+          )}
 
           <Button type="submit" className="w-full bg-accent text-accent-foreground hover:bg-accent/90 mt-2">
             {taskToEdit ? (

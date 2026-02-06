@@ -59,6 +59,8 @@ export const translations = {
     login: 'Login with Google',
     logout: 'Logout',
     welcome: 'Welcome',
+    additionalTimeLabel: 'Allocate Additional Time',
+    additionalTimeMessage: 'Additional time has been allocated to complete the task.',
   },
   vi: {
     appName: 'La Bàn Công Việc',
@@ -119,6 +121,8 @@ export const translations = {
     login: 'Đăng nhập Google',
     logout: 'Đăng xuất',
     welcome: 'Chào mừng',
+    additionalTimeLabel: 'Cấp thêm thời gian',
+    additionalTimeMessage: 'Thời gian bổ sung đã được cấp để hoàn thành nhiệm vụ.',
   }
 };
 
