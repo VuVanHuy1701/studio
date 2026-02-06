@@ -17,9 +17,17 @@ interface AuthContextType {
   loginAsMockUser: (username: string) => Promise<void>;
   loginAsAdmin: (username: string, password: string) => Promise<boolean>;
   logout: () => Promise<void>;
+  knownUsers: { name: string; id: string }[];
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+const MOCK_USERS = [
+  { name: 'Alice', id: 'mock-alice' },
+  { name: 'Bob', id: 'mock-bob' },
+  { name: 'Charlie', id: 'mock-charlie' },
+  { name: 'Dana', id: 'mock-dana' },
+];
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AppUser | null>(null);
@@ -95,7 +103,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, loginWithGoogle, loginAsMockUser, loginAsAdmin, logout }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      loading, 
+      loginWithGoogle, 
+      loginAsMockUser, 
+      loginAsAdmin, 
+      logout,
+      knownUsers: MOCK_USERS 
+    }}>
       {children}
     </AuthContext.Provider>
   );

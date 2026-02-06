@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -10,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, Calendar as CalendarIcon, UserPlus, Save } from 'lucide-react';
+import { Plus, Calendar as CalendarIcon, UserPlus, Save, Search } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { format } from 'date-fns';
@@ -27,7 +26,7 @@ interface TaskFormProps {
 export function TaskForm({ taskToEdit, open: externalOpen, onOpenChange: setExternalOpen }: TaskFormProps) {
   const { addTask, updateTask } = useTasks();
   const { t } = useSettings();
-  const { user } = useAuth();
+  const { user, knownUsers } = useAuth();
   const [internalOpen, setInternalOpen] = useState(false);
   
   const open = externalOpen !== undefined ? externalOpen : internalOpen;
@@ -78,7 +77,7 @@ export function TaskForm({ taskToEdit, open: externalOpen, onOpenChange: setExte
         dueDate,
         completed: false,
         priority,
-        assignedTo: user?.role === 'admin' ? assignedTo : user?.displayName || user?.email || 'Me',
+        assignedTo: user?.role === 'admin' ? (assignedTo || 'Me') : user?.displayName || user?.email || 'Me',
         createdBy: user?.uid
       });
     }
@@ -127,12 +126,17 @@ export function TaskForm({ taskToEdit, open: externalOpen, onOpenChange: setExte
                 <UserPlus className="w-4 h-4" />
                 Assign to User
               </Label>
-              <Input 
-                id="assign" 
-                placeholder="User email or name..." 
-                value={assignedTo}
-                onChange={(e) => setAssignedTo(e.target.value)}
-              />
+              <Select value={assignedTo} onValueChange={setAssignedTo}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select a user to assign..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Me">Assign to Me (Admin)</SelectItem>
+                  {knownUsers.map(u => (
+                    <SelectItem key={u.id} value={u.name}>{u.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           )}
           
