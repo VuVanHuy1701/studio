@@ -69,8 +69,9 @@ export function TaskCard({ task }: TaskCardProps) {
       const now = new Date();
       const dueDate = new Date(task.dueDate);
       const diffMs = dueDate.getTime() - now.getTime();
-      const twoHoursInMs = 2 * 60 * 60 * 1000;
-      setIsUrgentDeadline(diffMs > 0 && diffMs <= twoHoursInMs);
+      // Highlight tasks within 1 hour of deadline
+      const oneHourInMs = 1 * 60 * 60 * 1000;
+      setIsUrgentDeadline(diffMs > 0 && diffMs <= oneHourInMs);
     };
 
     checkUrgency();
