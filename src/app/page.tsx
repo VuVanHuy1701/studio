@@ -1,3 +1,4 @@
+
 "use client";
 
 import { TaskProvider, useTasks } from '@/app/context/TaskContext';
@@ -15,7 +16,8 @@ import {
   Database,
   ArrowRight,
   ShieldCheck,
-  User
+  User,
+  AlertCircle
 } from 'lucide-react';
 import { format, isToday } from 'date-fns';
 import { useSettings } from '@/app/context/SettingsContext';
@@ -35,7 +37,6 @@ function DashboardContent() {
 
   const todayTasks = tasks.filter(t => isToday(new Date(t.dueDate)));
   
-  // Sorting: Unfinished tasks first, then by date
   const sortTasks = (taskList: Task[]) => {
     return [...taskList].sort((a, b) => {
       if (a.completed !== b.completed) {
@@ -122,6 +123,20 @@ function DashboardContent() {
           </Card>
         </section>
 
+        {overdue.length > 0 && (
+          <section className="space-y-4">
+            <div className="flex items-center gap-2 text-destructive">
+              <AlertCircle className="w-5 h-5" />
+              <h2 className="text-xl font-bold">Overdue Tasks</h2>
+            </div>
+            <div className="grid gap-3">
+              {overdue.map(task => (
+                <TaskCard key={task.id} task={task} />
+              ))}
+            </div>
+          </section>
+        )}
+
         <section className="space-y-6">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-bold flex items-center gap-2">
@@ -178,7 +193,7 @@ function DashboardContent() {
             )}
           </div>
 
-          {todayTasks.length === 0 && (
+          {todayTasks.length === 0 && overdue.length === 0 && (
             <div className="text-center py-12 bg-white rounded-xl border border-dashed text-muted-foreground flex flex-col items-center gap-2">
               <CheckCircle2 className="w-8 h-8 opacity-20" />
               <p>{t('noTasksToday')}</p>

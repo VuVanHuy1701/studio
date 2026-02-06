@@ -18,11 +18,12 @@ import {
   CheckCircle2,
   XCircle,
   AlertTriangle,
-  Users
+  Users,
+  AlertCircle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTasks } from '@/app/context/TaskContext';
-import { format } from 'date-fns';
+import { format, isPast } from 'date-fns';
 import { useSettings } from '@/app/context/SettingsContext';
 import { useAuth } from '@/app/context/AuthContext';
 import { TaskForm } from './TaskForm';
@@ -54,6 +55,8 @@ export function TaskCard({ task }: TaskCardProps) {
   const [notes, setNotes] = useState(task.notes || '');
   const [showNotesInput, setShowNotesInput] = useState(false);
   const [isUrgentDeadline, setIsUrgentDeadline] = useState(false);
+
+  const isOverdue = !task.completed && isPast(new Date(task.dueDate));
 
   useEffect(() => {
     const checkUrgency = () => {
@@ -97,14 +100,11 @@ export function TaskCard({ task }: TaskCardProps) {
 
     if (!task.completed) {
       if (isAdminCreated && !isAdmin && isLead) {
-        // Administrator tasks require a progress review if completed by a lead
         setProgressDialogOpen(true);
       } else {
-        // Personal tasks or admin direct actions toggle immediately
         toggleTask(task.id);
       }
     } else {
-      // Un-completing doesn't need confirmation or review
       toggleTask(task.id);
     }
   };
@@ -130,7 +130,8 @@ export function TaskCard({ task }: TaskCardProps) {
         "group relative overflow-hidden transition-all hover:shadow-md border-l-4",
         task.completed ? "opacity-60 grayscale-[0.5] border-l-muted" : "border-l-primary",
         isAdminCreated && !isAdmin && "bg-accent/[0.07] border-l-accent ring-1 ring-accent/20",
-        isUrgentDeadline && "border-l-destructive bg-destructive/5 ring-1 ring-destructive/30 animate-pulse-slow"
+        isUrgentDeadline && !isOverdue && "border-l-destructive bg-destructive/5 ring-1 ring-destructive/30 animate-pulse-slow",
+        isOverdue && "border-l-destructive bg-destructive/10 ring-2 ring-destructive/40"
       )}>
         <CardContent className="p-4 flex items-start gap-4">
           <div className="pt-1">
@@ -164,7 +165,7 @@ export function TaskCard({ task }: TaskCardProps) {
                 <h3 className={cn(
                   "font-semibold text-lg leading-tight transition-all",
                   task.completed && "line-through text-muted-foreground",
-                  isUrgentDeadline && "text-destructive font-bold"
+                  (isUrgentDeadline || isOverdue) && "text-destructive font-bold"
                 )}>
                   {task.title}
                 </h3>
@@ -174,7 +175,13 @@ export function TaskCard({ task }: TaskCardProps) {
                     Admin
                   </Badge>
                 )}
-                {isUrgentDeadline && (
+                {isOverdue && (
+                  <Badge variant="destructive" className="text-[10px] h-4 px-1.5 flex gap-1 items-center bg-destructive text-destructive-foreground font-black uppercase">
+                    <AlertCircle className="w-3 h-3" />
+                    Overdue
+                  </Badge>
+                )}
+                {isUrgentDeadline && !isOverdue && (
                   <Badge variant="destructive" className="text-[10px] h-4 px-1.5 flex gap-1 items-center animate-bounce">
                     <AlertTriangle className="w-3 h-3" />
                     Due Soon
@@ -206,7 +213,7 @@ export function TaskCard({ task }: TaskCardProps) {
             <div className="flex flex-wrap items-center gap-x-4 gap-y-2 pt-2 text-[11px] text-muted-foreground uppercase tracking-wider font-bold">
               <span className={cn(
                 "flex items-center gap-1",
-                isUrgentDeadline && "text-destructive"
+                (isUrgentDeadline || isOverdue) && "text-destructive"
               )}>
                 <Clock className="w-3 h-3" />
                 {format(new Date(task.dueDate), 'HH:mm - MMM dd')}
@@ -262,7 +269,6 @@ export function TaskCard({ task }: TaskCardProps) {
         </CardContent>
       </Card>
 
-      {/* Progress Review Dialog */}
       <Dialog open={progressDialogOpen} onOpenChange={setProgressDialogOpen}>
         <DialogContent className="sm:max-w-[400px]">
           <DialogHeader>

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { TaskProvider, useTasks } from '@/app/context/TaskContext';
@@ -7,7 +8,7 @@ import { TaskCard } from '@/components/tasks/TaskCard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { format, isToday, addDays } from 'date-fns';
 import { useState } from 'react';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, ShieldCheck, User } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, ShieldCheck, User, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/app/context/AuthContext';
 import { Badge } from '@/components/ui/badge';
@@ -15,7 +16,7 @@ import { cn } from '@/lib/utils';
 import { Task } from '@/app/lib/types';
 
 function TasksContent() {
-  const { tasks } = useTasks();
+  const { tasks, getOverdueTasks } = useTasks();
   const { user } = useAuth();
   const [selectedDate, setSelectedDate] = useState(new Date());
 
@@ -27,9 +28,9 @@ function TasksContent() {
            d.getFullYear() === s.getFullYear();
   });
 
+  const overdue = getOverdueTasks();
   const isAdmin = user?.role === 'admin';
 
-  // Sorting: Unfinished tasks first, then by date
   const sortTasks = (taskList: Task[]) => {
     return [...taskList].sort((a, b) => {
       if (a.completed !== b.completed) {
@@ -80,6 +81,21 @@ function TasksContent() {
             </Button>
           </div>
         </header>
+
+        {overdue.length > 0 && (
+          <div className="space-y-4 bg-destructive/5 p-4 rounded-xl border border-destructive/20">
+            <div className="flex items-center gap-2 text-destructive">
+              <AlertCircle className="w-4 h-4" />
+              <h2 className="text-sm font-bold uppercase tracking-wider">Overdue Tasks</h2>
+              <Badge variant="destructive" className="ml-auto">{overdue.length}</Badge>
+            </div>
+            <div className="grid gap-3">
+              {overdue.map(task => (
+                <TaskCard key={task.id} task={task} />
+              ))}
+            </div>
+          </div>
+        )}
 
         <Tabs defaultValue="list" className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-8">
