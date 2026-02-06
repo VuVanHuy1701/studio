@@ -18,6 +18,7 @@ export interface Task {
   category: Category;
   dueDate: Date;
   completed: boolean;
+  completedAt?: Date; // Added to track when the task was finished
   priority: 'Low' | 'Medium' | 'High';
   assignedTo: string[]; // List of UIDs or Names, ordered by rank
   createdBy?: string;

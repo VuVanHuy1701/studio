@@ -31,6 +31,7 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
         setTasks(parsed.map((t: any) => ({ 
           ...t, 
           dueDate: new Date(t.dueDate),
+          completedAt: t.completedAt ? new Date(t.completedAt) : undefined,
           assignedTo: Array.isArray(t.assignedTo) ? t.assignedTo : [t.assignedTo || 'Me']
         })));
       } catch (e) {
@@ -52,15 +53,36 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
   };
 
   const toggleTask = (id: string) => {
-    setTasks(prev => prev.map(task => 
-      task.id === id ? { ...task, completed: !task.completed } : task
-    ));
+    setTasks(prev => prev.map(task => {
+      if (task.id === id) {
+        const isNowCompleted = !task.completed;
+        return { 
+          ...task, 
+          completed: isNowCompleted,
+          completedAt: isNowCompleted ? new Date() : undefined
+        };
+      }
+      return task;
+    }));
   };
 
   const updateTask = (id: string, updates: Partial<Task>) => {
-    setTasks(prev => prev.map(task => 
-      task.id === id ? { ...task, ...updates } : task
-    ));
+    setTasks(prev => prev.map(task => {
+      if (task.id === id) {
+        const wasNotCompleted = !task.completed;
+        const isNowCompleted = updates.completed !== undefined ? updates.completed : task.completed;
+        
+        let completedAt = task.completedAt;
+        if (wasNotCompleted && isNowCompleted) {
+          completedAt = new Date();
+        } else if (isNowCompleted === false) {
+          completedAt = undefined;
+        }
+
+        return { ...task, ...updates, completedAt };
+      }
+      return task;
+    }));
   };
 
   const deleteTask = (id: string) => {
@@ -113,6 +135,7 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
         const validatedTasks = importedTasks.map((t: any) => ({
           ...t,
           dueDate: new Date(t.dueDate),
+          completedAt: t.completedAt ? new Date(t.completedAt) : undefined,
           assignedTo: Array.isArray(t.assignedTo) ? t.assignedTo : [t.assignedTo || 'Me']
         }));
         setTasks(validatedTasks);

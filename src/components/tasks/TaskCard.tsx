@@ -217,11 +217,16 @@ export function TaskCard({ task }: TaskCardProps) {
             
             <div className="flex flex-wrap items-center gap-x-4 gap-y-2 pt-2 text-[11px] text-muted-foreground uppercase tracking-wider font-bold">
               <span className={cn(
-                "flex items-center gap-1",
+                "flex items-center gap-1 flex-wrap",
                 (isUrgentDeadline || isOverdue) && "text-destructive"
               )}>
                 <Clock className="w-3 h-3" />
                 {format(new Date(task.dueDate), 'HH:mm - MMM dd')}
+                {task.completed && task.completedAt && (
+                  <span className="text-green-600 dark:text-green-400 ml-1 font-bold whitespace-nowrap">
+                    (Done: {format(new Date(task.completedAt), 'HH:mm')})
+                  </span>
+                )}
               </span>
               <span className="flex items-center gap-1">
                 <Tag className="w-3 h-3" />
