@@ -12,6 +12,7 @@ import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, ShieldCheck, User 
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/app/context/AuthContext';
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 function TasksContent() {
   const { tasks } = useTasks();
