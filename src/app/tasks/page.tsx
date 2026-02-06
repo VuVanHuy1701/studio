@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/app/context/AuthContext';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { Task } from '@/app/lib/types';
 
 function TasksContent() {
   const { tasks } = useTasks();
@@ -19,19 +20,31 @@ function TasksContent() {
   const [selectedDate, setSelectedDate] = useState(new Date());
 
   const dayTasks = tasks.filter(t => {
-    const d = t.dueDate;
-    return d.getDate() === selectedDate.getDate() && 
-           d.getMonth() === selectedDate.getMonth() && 
-           d.getFullYear() === selectedDate.getFullYear();
+    const d = new Date(t.dueDate);
+    const s = selectedDate;
+    return d.getDate() === s.getDate() && 
+           d.getMonth() === s.getMonth() && 
+           d.getFullYear() === s.getFullYear();
   });
 
   const isAdmin = user?.role === 'admin';
-  const adminTasks = dayTasks.filter(t => t.createdBy === 'admin-id');
-  const personalTasks = dayTasks.filter(t => t.createdBy !== 'admin-id');
+
+  // Sorting: Unfinished tasks first, then by date
+  const sortTasks = (taskList: Task[]) => {
+    return [...taskList].sort((a, b) => {
+      if (a.completed !== b.completed) {
+        return a.completed ? 1 : -1;
+      }
+      return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+    });
+  };
+
+  const adminTasks = sortTasks(dayTasks.filter(t => t.createdBy === 'admin-id'));
+  const personalTasks = sortTasks(dayTasks.filter(t => t.createdBy !== 'admin-id'));
 
   const hours = Array.from({ length: 24 }, (_, i) => i);
 
-  const TaskList = ({ items, title, icon: Icon, colorClass }: { items: any[], title: string, icon: any, colorClass: string }) => (
+  const TaskList = ({ items, title, icon: Icon, colorClass }: { items: Task[], title: string, icon: any, colorClass: string }) => (
     <div className="space-y-3">
       <div className="flex items-center gap-2 px-1">
         <Icon className={cn("w-4 h-4", colorClass)} />
@@ -39,7 +52,7 @@ function TasksContent() {
         <Badge variant="outline" className="ml-auto text-[10px] h-4">{items.length}</Badge>
       </div>
       <div className="grid gap-3">
-        {items.sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime()).map(task => (
+        {items.map(task => (
           <TaskCard key={task.id} task={task} />
         ))}
       </div>
@@ -77,7 +90,6 @@ function TasksContent() {
           <TabsContent value="list" className="space-y-8">
             {dayTasks.length > 0 ? (
               <>
-                {/* For Admin: Show only their assignments. For User: Show Admin tasks section */}
                 {adminTasks.length > 0 && (
                   <TaskList 
                     items={adminTasks} 
@@ -87,7 +99,6 @@ function TasksContent() {
                   />
                 )}
                 
-                {/* Personal Tasks: Only visible to regular users */}
                 {!isAdmin && personalTasks.length > 0 && (
                   <TaskList 
                     items={personalTasks} 
@@ -112,7 +123,7 @@ function TasksContent() {
           
           <TabsContent value="hourly" className="relative space-y-0 bg-white rounded-xl border shadow-sm p-4">
             {hours.map((hour) => {
-              const hourlyTasks = dayTasks.filter(t => t.dueDate.getHours() === hour);
+              const hourlyTasks = sortTasks(dayTasks.filter(t => new Date(t.dueDate).getHours() === hour));
               return (
                 <div key={hour} className="group flex gap-4 border-b last:border-0 py-4 min-h-[80px]">
                   <div className="w-16 text-xs font-bold text-muted-foreground pt-1 sticky left-0 bg-white">

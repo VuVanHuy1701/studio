@@ -10,7 +10,6 @@ import { Progress } from '@/components/ui/progress';
 import { 
   CheckCircle2, 
   Calendar, 
-  AlertCircle, 
   Download, 
   Upload, 
   Database,
@@ -25,6 +24,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useRef } from 'react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
+import { Task } from '@/app/lib/types';
 
 function DashboardContent() {
   const { tasks, getOverdueTasks, exportTasks, importTasks } = useTasks();
@@ -34,8 +34,19 @@ function DashboardContent() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const todayTasks = tasks.filter(t => isToday(new Date(t.dueDate)));
-  const adminTasks = todayTasks.filter(t => t.createdBy === 'admin-id');
-  const personalTasks = todayTasks.filter(t => t.createdBy !== 'admin-id');
+  
+  // Sorting: Unfinished tasks first, then by date
+  const sortTasks = (taskList: Task[]) => {
+    return [...taskList].sort((a, b) => {
+      if (a.completed !== b.completed) {
+        return a.completed ? 1 : -1;
+      }
+      return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+    });
+  };
+
+  const adminTasks = sortTasks(todayTasks.filter(t => t.createdBy === 'admin-id'));
+  const personalTasks = sortTasks(todayTasks.filter(t => t.createdBy !== 'admin-id'));
   
   const completedToday = todayTasks.filter(t => t.completed).length;
   const totalToday = todayTasks.length;
@@ -128,7 +139,6 @@ function DashboardContent() {
             "grid gap-6",
             isAdmin ? "grid-cols-1" : "grid-cols-1 md:grid-cols-2"
           )}>
-            {/* Column 1: Admin Tasks (Visible to both, but Admin only sees what they created) */}
             <div className="space-y-4">
               <div className="flex items-center gap-2 border-b pb-2">
                 <ShieldCheck className="w-4 h-4 text-accent" />
@@ -138,9 +148,7 @@ function DashboardContent() {
               </div>
               <div className="grid gap-3">
                 {adminTasks.length > 0 ? (
-                  adminTasks
-                    .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
-                    .map(task => (
+                  adminTasks.map(task => (
                     <TaskCard key={task.id} task={task} />
                   ))
                 ) : (
@@ -151,7 +159,6 @@ function DashboardContent() {
               </div>
             </div>
 
-            {/* Column 2: User Tasks (Hidden from Admin) */}
             {!isAdmin && (
               <div className="space-y-4">
                 <div className="flex items-center gap-2 border-b pb-2">
@@ -160,9 +167,7 @@ function DashboardContent() {
                 </div>
                 <div className="grid gap-3">
                   {personalTasks.length > 0 ? (
-                    personalTasks
-                      .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
-                      .map(task => (
+                    personalTasks.map(task => (
                       <TaskCard key={task.id} task={task} />
                     ))
                   ) : (

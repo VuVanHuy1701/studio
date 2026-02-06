@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Task } from '@/app/lib/types';
@@ -16,7 +15,8 @@ import {
   Edit3, 
   MessageSquare,
   CheckCircle2,
-  XCircle
+  XCircle,
+  AlertTriangle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTasks } from '@/app/context/TaskContext';
@@ -24,13 +24,12 @@ import { format } from 'date-fns';
 import { useSettings } from '@/app/context/SettingsContext';
 import { useAuth } from '@/app/context/AuthContext';
 import { TaskForm } from './TaskForm';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -46,6 +45,27 @@ export function TaskCard({ task }: TaskCardProps) {
   const [progressDialogOpen, setProgressDialogOpen] = useState(false);
   const [notes, setNotes] = useState(task.notes || '');
   const [showNotesInput, setShowNotesInput] = useState(false);
+  const [isUrgentDeadline, setIsUrgentDeadline] = useState(false);
+
+  useEffect(() => {
+    const checkUrgency = () => {
+      if (task.completed) {
+        setIsUrgentDeadline(false);
+        return;
+      }
+      const now = new Date();
+      const dueDate = new Date(task.dueDate);
+      const diffMs = dueDate.getTime() - now.getTime();
+      const twoHoursInMs = 2 * 60 * 60 * 1000;
+      
+      // Highlight if deadline is within 2 hours in the future
+      setIsUrgentDeadline(diffMs > 0 && diffMs <= twoHoursInMs);
+    };
+
+    checkUrgency();
+    const interval = setInterval(checkUrgency, 60000); // Re-check every minute
+    return () => clearInterval(interval);
+  }, [task.dueDate, task.completed]);
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -62,7 +82,6 @@ export function TaskCard({ task }: TaskCardProps) {
   const canEdit = isAdmin || isOwner;
 
   const handleToggle = () => {
-    // If it's an admin task and the user is marking it complete, show the progress dialog
     if (isAdminCreated && !task.completed && !isAdmin) {
       setProgressDialogOpen(true);
     } else {
@@ -90,7 +109,8 @@ export function TaskCard({ task }: TaskCardProps) {
       <Card className={cn(
         "group relative overflow-hidden transition-all hover:shadow-md border-l-4",
         task.completed ? "opacity-60 grayscale-[0.5] border-l-muted" : "border-l-primary",
-        isAdminCreated && !isAdmin && "bg-accent/[0.07] border-l-accent ring-1 ring-accent/20"
+        isAdminCreated && !isAdmin && "bg-accent/[0.07] border-l-accent ring-1 ring-accent/20",
+        isUrgentDeadline && "border-l-destructive bg-destructive/5 ring-1 ring-destructive/30 animate-pulse-slow"
       )}>
         <CardContent className="p-4 flex items-start gap-4">
           <div className="pt-1">
@@ -106,7 +126,8 @@ export function TaskCard({ task }: TaskCardProps) {
               <div className="flex items-center gap-2">
                 <h3 className={cn(
                   "font-semibold text-lg leading-tight transition-all",
-                  task.completed && "line-through text-muted-foreground"
+                  task.completed && "line-through text-muted-foreground",
+                  isUrgentDeadline && "text-destructive font-bold"
                 )}>
                   {task.title}
                 </h3>
@@ -114,6 +135,12 @@ export function TaskCard({ task }: TaskCardProps) {
                   <Badge variant="secondary" className="text-[10px] h-4 px-1.5 flex gap-1 items-center bg-accent/20 text-accent-foreground border-accent/30 font-bold uppercase tracking-tighter">
                     <ShieldCheck className="w-3 h-3" />
                     Admin
+                  </Badge>
+                )}
+                {isUrgentDeadline && (
+                  <Badge variant="destructive" className="text-[10px] h-4 px-1.5 flex gap-1 items-center animate-bounce">
+                    <AlertTriangle className="w-3 h-3" />
+                    Due Soon
                   </Badge>
                 )}
               </div>
@@ -140,7 +167,10 @@ export function TaskCard({ task }: TaskCardProps) {
             )}
             
             <div className="flex flex-wrap items-center gap-x-4 gap-y-2 pt-2 text-[11px] text-muted-foreground uppercase tracking-wider font-bold">
-              <span className="flex items-center gap-1">
+              <span className={cn(
+                "flex items-center gap-1",
+                isUrgentDeadline && "text-destructive"
+              )}>
                 <Clock className="w-3 h-3" />
                 {format(new Date(task.dueDate), 'HH:mm - MMM dd')}
               </span>
@@ -189,7 +219,6 @@ export function TaskCard({ task }: TaskCardProps) {
         </CardContent>
       </Card>
 
-      {/* Work Progress Dialog */}
       <Dialog open={progressDialogOpen} onOpenChange={setProgressDialogOpen}>
         <DialogContent className="sm:max-w-[400px]">
           <DialogHeader>
