@@ -38,7 +38,7 @@ export function TaskForm({ taskToEdit, open: externalOpen, onOpenChange: setExte
   const [category, setCategory] = useState<Category>('Work');
   const [priority, setPriority] = useState<Task['priority']>('Medium');
   const [dateString, setDateString] = useState(format(new Date(), 'yyyy-MM-dd'));
-  const [time, setTime] = useState('12:00');
+  const [time, setTime] = useState('16:30');
   const [assignedUsers, setAssignedUsers] = useState<string[]>([]);
   const [userSearch, setUserSearch] = useState('');
 
@@ -60,7 +60,7 @@ export function TaskForm({ taskToEdit, open: externalOpen, onOpenChange: setExte
     } else if (!taskToEdit && open) {
       setAssignedUsers(user?.role === 'admin' ? [] : [user?.displayName || 'Me']);
       setDateString(format(new Date(), 'yyyy-MM-dd'));
-      setTime('12:00');
+      setTime('16:30');
     }
   }, [taskToEdit, open, user]);
 
