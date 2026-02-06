@@ -6,13 +6,16 @@ import { Navbar } from '@/components/layout/Navbar';
 import { TaskForm } from '@/components/tasks/TaskForm';
 import { TaskCard } from '@/components/tasks/TaskCard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { format, isToday, addDays, startOfDay, endOfDay } from 'date-fns';
+import { format, isToday, addDays } from 'date-fns';
 import { useState } from 'react';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, ShieldCheck, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/app/context/AuthContext';
+import { Badge } from '@/components/ui/badge';
 
 function TasksContent() {
   const { tasks } = useTasks();
+  const { user } = useAuth();
   const [selectedDate, setSelectedDate] = useState(new Date());
 
   const dayTasks = tasks.filter(t => {
@@ -22,7 +25,25 @@ function TasksContent() {
            d.getFullYear() === selectedDate.getFullYear();
   });
 
+  const adminTasks = dayTasks.filter(t => t.createdBy === 'admin-id');
+  const personalTasks = dayTasks.filter(t => t.createdBy !== 'admin-id');
+
   const hours = Array.from({ length: 24 }, (_, i) => i);
+
+  const TaskList = ({ items, title, icon: Icon, colorClass }: { items: any[], title: string, icon: any, colorClass: string }) => (
+    <div className="space-y-3">
+      <div className="flex items-center gap-2 px-1">
+        <Icon className={cn("w-4 h-4", colorClass)} />
+        <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{title}</h2>
+        <Badge variant="outline" className="ml-auto text-[10px] h-4">{items.length}</Badge>
+      </div>
+      <div className="grid gap-3">
+        {items.sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime()).map(task => (
+          <TaskCard key={task.id} task={task} />
+        ))}
+      </div>
+    </div>
+  );
 
   return (
     <div className="min-h-screen pb-24 md:pt-20">
@@ -52,20 +73,30 @@ function TasksContent() {
             <TabsTrigger value="hourly">Hourly View</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="list" className="space-y-4">
-            <div className="grid gap-3">
-              {dayTasks.length > 0 ? (
-                dayTasks
-                  .sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime())
-                  .map(task => (
-                  <TaskCard key={task.id} task={task} />
-                ))
-              ) : (
-                <div className="text-center py-20 bg-white rounded-xl border border-dashed text-muted-foreground">
-                  No tasks for this day.
-                </div>
-              )}
-            </div>
+          <TabsContent value="list" className="space-y-8">
+            {dayTasks.length > 0 ? (
+              <>
+                {user?.role !== 'admin' && adminTasks.length > 0 && (
+                  <TaskList 
+                    items={adminTasks} 
+                    title="From Administrator" 
+                    icon={ShieldCheck} 
+                    colorClass="text-accent" 
+                  />
+                )}
+                
+                <TaskList 
+                  items={user?.role === 'admin' ? dayTasks : personalTasks} 
+                  title={user?.role === 'admin' ? "Global Schedule" : "Personal Tasks"} 
+                  icon={User} 
+                  colorClass="text-primary" 
+                />
+              </>
+            ) : (
+              <div className="text-center py-20 bg-white rounded-xl border border-dashed text-muted-foreground">
+                No tasks for this day.
+              </div>
+            )}
           </TabsContent>
           
           <TabsContent value="hourly" className="relative space-y-0 bg-white rounded-xl border shadow-sm p-4">
