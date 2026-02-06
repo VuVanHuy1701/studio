@@ -21,6 +21,7 @@ export interface Task {
   priority: 'Low' | 'Medium' | 'High';
   assignedTo?: string; // UID or Name of the user
   createdBy?: string;
+  notes?: string; // Feedback for uncompleted admin tasks
 }
 
 export interface ProgressStats {

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Task } from '@/app/lib/types';
@@ -5,7 +6,18 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Trash2, Clock, Tag, User, ShieldCheck, Lock, Edit3 } from 'lucide-react';
+import { 
+  Trash2, 
+  Clock, 
+  Tag, 
+  User, 
+  ShieldCheck, 
+  Lock, 
+  Edit3, 
+  MessageSquare,
+  CheckCircle2,
+  XCircle
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTasks } from '@/app/context/TaskContext';
 import { format } from 'date-fns';
@@ -13,16 +25,27 @@ import { useSettings } from '@/app/context/SettingsContext';
 import { useAuth } from '@/app/context/AuthContext';
 import { TaskForm } from './TaskForm';
 import { useState } from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 
 interface TaskCardProps {
   task: Task;
 }
 
 export function TaskCard({ task }: TaskCardProps) {
-  const { toggleTask, deleteTask } = useTasks();
+  const { toggleTask, deleteTask, updateTask } = useTasks();
   const { t } = useSettings();
   const { user } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
+  const [progressDialogOpen, setProgressDialogOpen] = useState(false);
+  const [notes, setNotes] = useState(task.notes || '');
+  const [showNotesInput, setShowNotesInput] = useState(false);
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -38,18 +61,42 @@ export function TaskCard({ task }: TaskCardProps) {
   const canDelete = isAdmin || isOwner;
   const canEdit = isAdmin || isOwner;
 
+  const handleToggle = () => {
+    // If it's an admin task and the user is marking it complete, show the progress dialog
+    if (isAdminCreated && !task.completed && !isAdmin) {
+      setProgressDialogOpen(true);
+    } else {
+      toggleTask(task.id);
+    }
+  };
+
+  const handleMarkComplete = () => {
+    updateTask(task.id, { completed: true });
+    setProgressDialogOpen(false);
+  };
+
+  const handleNotCompleted = () => {
+    setShowNotesInput(true);
+  };
+
+  const handleSaveNotes = () => {
+    updateTask(task.id, { notes: notes, completed: false });
+    setProgressDialogOpen(false);
+    setShowNotesInput(false);
+  };
+
   return (
     <>
       <Card className={cn(
         "group relative overflow-hidden transition-all hover:shadow-md border-l-4",
         task.completed ? "opacity-60 grayscale-[0.5] border-l-muted" : "border-l-primary",
-        isAdminCreated && !isAdmin && "bg-accent/[0.07] border-l-accent ring-1 ring-accent/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.5)]"
+        isAdminCreated && !isAdmin && "bg-accent/[0.07] border-l-accent ring-1 ring-accent/20"
       )}>
         <CardContent className="p-4 flex items-start gap-4">
           <div className="pt-1">
             <Checkbox 
               checked={task.completed} 
-              onCheckedChange={() => toggleTask(task.id)}
+              onCheckedChange={handleToggle}
               className="w-5 h-5 rounded-full"
             />
           </div>
@@ -81,6 +128,15 @@ export function TaskCard({ task }: TaskCardProps) {
               <p className="text-sm text-muted-foreground line-clamp-2">
                 {task.description}
               </p>
+            )}
+
+            {task.notes && (
+              <div className="mt-2 p-2 rounded bg-muted/50 border border-dashed text-xs text-muted-foreground">
+                <p className="font-bold flex items-center gap-1 mb-1">
+                  <MessageSquare className="w-3 h-3" /> User Notes:
+                </p>
+                {task.notes}
+              </div>
             )}
             
             <div className="flex flex-wrap items-center gap-x-4 gap-y-2 pt-2 text-[11px] text-muted-foreground uppercase tracking-wider font-bold">
@@ -132,6 +188,57 @@ export function TaskCard({ task }: TaskCardProps) {
           </div>
         </CardContent>
       </Card>
+
+      {/* Work Progress Dialog */}
+      <Dialog open={progressDialogOpen} onOpenChange={setProgressDialogOpen}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ShieldCheck className="w-5 h-5 text-accent" />
+              Work Progress Review
+            </DialogTitle>
+          </DialogHeader>
+          
+          {!showNotesInput ? (
+            <div className="space-y-4 py-4">
+              <p className="text-sm text-muted-foreground">
+                How is the progress on this task assigned by the Administrator?
+              </p>
+              <div className="grid grid-cols-2 gap-4">
+                <Button 
+                  onClick={handleMarkComplete}
+                  className="h-24 flex flex-col gap-2 bg-green-600 hover:bg-green-700 text-white"
+                >
+                  <CheckCircle2 className="w-8 h-8" />
+                  <span>Completed</span>
+                </Button>
+                <Button 
+                  variant="outline"
+                  onClick={handleNotCompleted}
+                  className="h-24 flex flex-col gap-2 border-accent text-accent hover:bg-accent/5"
+                >
+                  <XCircle className="w-8 h-8" />
+                  <span>Not Completed</span>
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4 py-4">
+              <p className="text-sm font-medium">Please provide notes for the Administrator:</p>
+              <Textarea 
+                placeholder="Why is the task not completed? Any challenges?" 
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                className="min-h-[120px]"
+              />
+              <Button onClick={handleSaveNotes} className="w-full bg-accent text-accent-foreground">
+                Submit Progress Notes
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
       {isEditing && (
         <TaskForm 
           taskToEdit={task} 
