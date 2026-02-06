@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Task } from '@/app/lib/types';
@@ -44,7 +43,7 @@ export function TaskCard({ task }: TaskCardProps) {
       <Card className={cn(
         "group relative overflow-hidden transition-all hover:shadow-md border-l-4",
         task.completed ? "opacity-60 grayscale-[0.5] border-l-muted" : "border-l-primary",
-        isAdminCreated && !isAdmin && "bg-primary/5 border-l-accent ring-1 ring-accent/10"
+        isAdminCreated && !isAdmin && "bg-accent/[0.07] border-l-accent ring-1 ring-accent/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.5)]"
       )}>
         <CardContent className="p-4 flex items-start gap-4">
           <div className="pt-1">
@@ -65,7 +64,7 @@ export function TaskCard({ task }: TaskCardProps) {
                   {task.title}
                 </h3>
                 {isAdminCreated && (
-                  <Badge variant="secondary" className="text-[10px] h-4 px-1.5 flex gap-1 items-center bg-accent/20 text-accent-foreground border-accent/30">
+                  <Badge variant="secondary" className="text-[10px] h-4 px-1.5 flex gap-1 items-center bg-accent/20 text-accent-foreground border-accent/30 font-bold uppercase tracking-tighter">
                     <ShieldCheck className="w-3 h-3" />
                     Admin
                   </Badge>
@@ -94,7 +93,10 @@ export function TaskCard({ task }: TaskCardProps) {
                 {t(task.category.toLowerCase() as any)}
               </span>
               {(task.assignedTo || isAdmin) && (
-                <span className="flex items-center gap-1 text-primary">
+                <span className={cn(
+                  "flex items-center gap-1",
+                  isAdminCreated ? "text-accent" : "text-primary"
+                )}>
                   <User className="w-3 h-3" />
                   {isAdmin ? `To: ${task.assignedTo}` : (task.assignedTo === user?.displayName ? "Assigned to Me" : task.assignedTo)}
                 </span>
@@ -123,7 +125,7 @@ export function TaskCard({ task }: TaskCardProps) {
                 <Trash2 className="w-4 h-4" />
               </Button>
             ) : (
-              <div className="text-muted-foreground/30 px-2" title="Locked: Admin assigned">
+              <div className="text-muted-foreground/30 px-2 flex items-center gap-1" title="Locked: Admin assigned">
                 <Lock className="w-4 h-4" />
               </div>
             )}
