@@ -33,6 +33,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Tooltip,
@@ -51,6 +61,7 @@ export function TaskCard({ task }: TaskCardProps) {
   const { user } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [progressDialogOpen, setProgressDialogOpen] = useState(false);
+  const [confirmCompleteOpen, setConfirmCompleteOpen] = useState(false);
   const [notes, setNotes] = useState(task.notes || '');
   const [showNotesInput, setShowNotesInput] = useState(false);
   const [isUrgentDeadline, setIsUrgentDeadline] = useState(false);
@@ -85,29 +96,33 @@ export function TaskCard({ task }: TaskCardProps) {
   const isOwner = task.createdBy === user?.uid;
   const isAdmin = user?.role === 'admin';
   
-  // The first person in the assignedTo list is the "Lead"
   const leadAssignee = task.assignedTo?.[0] || 'Me';
   const isLead = leadAssignee === user?.displayName || leadAssignee === user?.email || leadAssignee === user?.uid || (leadAssignee === 'Me' && isAdmin);
   
   const canDelete = isAdmin || isOwner;
   const canEdit = isAdmin || isOwner;
-  
-  // Only the lead or an admin can toggle status for admin-created tasks
   const canToggle = !isAdminCreated || isLead || isAdmin;
 
-  const handleToggle = () => {
+  const handleToggleAttempt = () => {
     if (!canToggle) return;
 
-    if (isAdminCreated && !task.completed && !isAdmin) {
-      // If user is lead, they show the progress review
-      if (isLead) {
-        setProgressDialogOpen(true);
-      } else {
-        // This block should technically not be reachable if canToggle is correct, 
-        // but it's here for safety.
-        toggleTask(task.id);
-      }
+    if (!task.completed) {
+      // Show confirmation before finishing
+      setConfirmCompleteOpen(true);
     } else {
+      // Un-completing doesn't need confirmation
+      toggleTask(task.id);
+    }
+  };
+
+  const handleConfirmCompletion = () => {
+    setConfirmCompleteOpen(false);
+    
+    if (isAdminCreated && !isAdmin && isLead) {
+      // Administrator tasks require a progress review if completed by a lead
+      setProgressDialogOpen(true);
+    } else {
+      // Personal tasks or admin direct actions toggle immediately
       toggleTask(task.id);
     }
   };
@@ -143,7 +158,7 @@ export function TaskCard({ task }: TaskCardProps) {
                   <div>
                     <Checkbox 
                       checked={task.completed} 
-                      onCheckedChange={handleToggle}
+                      onCheckedChange={handleToggleAttempt}
                       disabled={!canToggle}
                       className={cn(
                         "w-5 h-5 rounded-full",
@@ -200,7 +215,7 @@ export function TaskCard({ task }: TaskCardProps) {
             {task.notes && (
               <div className="mt-2 p-2 rounded bg-muted/50 border border-dashed text-xs text-muted-foreground">
                 <p className="font-bold flex items-center gap-1 mb-1">
-                  <MessageSquare className="w-3 h-3" /> User Notes (from {leadAssignee}):
+                  <MessageSquare className="w-3 h-3" /> User Notes:
                 </p>
                 {task.notes}
               </div>
@@ -264,6 +279,21 @@ export function TaskCard({ task }: TaskCardProps) {
           </div>
         </CardContent>
       </Card>
+
+      <AlertDialog open={confirmCompleteOpen} onOpenChange={setConfirmCompleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure you want to finish the task?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will mark the task as completed. You can undo this action later if needed.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>No</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmCompletion}>Yes</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <Dialog open={progressDialogOpen} onOpenChange={setProgressDialogOpen}>
         <DialogContent className="sm:max-w-[400px]">
