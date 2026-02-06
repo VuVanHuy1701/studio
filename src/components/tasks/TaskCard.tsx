@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Task } from '@/app/lib/types';
@@ -6,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Trash2, Clock, Tag, User } from 'lucide-react';
+import { Trash2, Clock, Tag, User, ShieldCheck, Lock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTasks } from '@/app/context/TaskContext';
 import { format } from 'date-fns';
@@ -30,10 +29,16 @@ export function TaskCard({ task }: TaskCardProps) {
     }
   };
 
+  const isAdminCreated = task.createdBy === 'admin-id';
+  const isOwner = task.createdBy === user?.uid;
+  const isAdmin = user?.role === 'admin';
+  const canDelete = isAdmin || isOwner;
+
   return (
     <Card className={cn(
       "group relative overflow-hidden transition-all hover:shadow-md border-l-4",
-      task.completed ? "opacity-60 grayscale-[0.5] border-l-muted" : "border-l-primary"
+      task.completed ? "opacity-60 grayscale-[0.5] border-l-muted" : "border-l-primary",
+      isAdminCreated && !isAdmin && "bg-primary/5 border-l-accent"
     )}>
       <CardContent className="p-4 flex items-start gap-4">
         <div className="pt-1">
@@ -46,12 +51,20 @@ export function TaskCard({ task }: TaskCardProps) {
         
         <div className="flex-1 space-y-1">
           <div className="flex items-center justify-between gap-2">
-            <h3 className={cn(
-              "font-semibold text-lg leading-tight transition-all",
-              task.completed && "line-through text-muted-foreground"
-            )}>
-              {task.title}
-            </h3>
+            <div className="flex items-center gap-2">
+              <h3 className={cn(
+                "font-semibold text-lg leading-tight transition-all",
+                task.completed && "line-through text-muted-foreground"
+              )}>
+                {task.title}
+              </h3>
+              {isAdminCreated && (
+                <Badge variant="secondary" className="text-[10px] h-4 px-1.5 flex gap-1 items-center bg-accent/20 text-accent-foreground border-accent/30">
+                  <ShieldCheck className="w-3 h-3" />
+                  Admin
+                </Badge>
+              )}
+            </div>
             <div className="flex gap-2">
               <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0", getPriorityColor(task.priority))}>
                 {t(task.priority.toLowerCase() as any)}
@@ -77,22 +90,28 @@ export function TaskCard({ task }: TaskCardProps) {
             {task.assignedTo && (
               <span className="flex items-center gap-1 text-primary">
                 <User className="w-3 h-3" />
-                {task.assignedTo}
+                {task.assignedTo === user?.displayName ? "Me" : task.assignedTo}
               </span>
             )}
           </div>
         </div>
 
-        {(user?.role === 'admin' || !task.assignedTo || task.assignedTo === user?.displayName) && (
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={() => deleteTask(task.id)}
-            className="opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:bg-destructive/10"
-          >
-            <Trash2 className="w-4 h-4" />
-          </Button>
-        )}
+        <div className="flex items-center">
+          {canDelete ? (
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => deleteTask(task.id)}
+              className="opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:bg-destructive/10"
+            >
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          ) : (
+            <div className="text-muted-foreground/30 px-2">
+              <Lock className="w-4 h-4" />
+            </div>
+          )}
+        </div>
       </CardContent>
     </Card>
   );

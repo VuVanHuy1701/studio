@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
@@ -10,6 +9,7 @@ interface TaskContextType {
   addTask: (task: Omit<Task, 'id'>) => void;
   toggleTask: (id: string) => void;
   deleteTask: (id: string) => void;
+  updateTask: (id: string, updates: Partial<Task>) => void;
   getOverdueTasks: () => Task[];
   exportTasks: () => void;
   importTasks: (file: File) => Promise<boolean>;
@@ -52,26 +52,48 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
     ));
   };
 
+  const updateTask = (id: string, updates: Partial<Task>) => {
+    setTasks(prev => prev.map(task => 
+      task.id === id ? { ...task, ...updates } : task
+    ));
+  };
+
   const deleteTask = (id: string) => {
-    setTasks(prev => prev.filter(task => task.id !== id));
+    const task = tasks.find(t => t.id === id);
+    if (!task) return;
+
+    // Permissions check
+    const isOwner = task.createdBy === user?.uid;
+    const isAdmin = user?.role === 'admin';
+    
+    if (isAdmin || isOwner) {
+      setTasks(prev => prev.filter(t => t.id !== id));
+    } else {
+      console.warn("Permission denied: Cannot delete tasks assigned by Admin.");
+    }
+  };
+
+  const getVisibleTasks = () => {
+    if (!user) return [];
+    if (user.role === 'admin') return tasks;
+    
+    return tasks.filter(t => 
+      t.createdBy === user.uid || 
+      t.assignedTo === user.displayName || 
+      t.assignedTo === user.email ||
+      t.assignedTo === user.uid
+    );
   };
 
   const getOverdueTasks = () => {
     const now = new Date();
-    // Filter tasks based on role: admins see all, users see assigned or created by them
-    const visibleTasks = user?.role === 'admin' 
-      ? tasks 
-      : tasks.filter(t => !t.assignedTo || t.assignedTo === user?.displayName || t.assignedTo === user?.email || t.createdBy === user?.uid);
-      
-    return visibleTasks.filter(task => !task.completed && new Date(task.dueDate) < now);
+    return getVisibleTasks().filter(task => !task.completed && new Date(task.dueDate) < now);
   };
 
   const exportTasks = () => {
     const dataStr = JSON.stringify(tasks, null, 2);
     const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-    
     const exportFileDefaultName = `task-compass-backup-${new Date().toISOString().split('T')[0]}.json`;
-    
     const linkElement = document.createElement('a');
     linkElement.setAttribute('href', dataUri);
     linkElement.setAttribute('download', exportFileDefaultName);
@@ -82,7 +104,6 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
     try {
       const text = await file.text();
       const importedTasks = JSON.parse(text);
-      
       if (Array.isArray(importedTasks)) {
         const validatedTasks = importedTasks.map((t: any) => ({
           ...t,
@@ -100,10 +121,11 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <TaskContext.Provider value={{ 
-      tasks, 
+      tasks: getVisibleTasks(), 
       addTask, 
       toggleTask, 
       deleteTask, 
+      updateTask,
       getOverdueTasks,
       exportTasks,
       importTasks

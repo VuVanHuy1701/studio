@@ -1,9 +1,8 @@
-
 "use client";
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Compass, CheckCircle2, BarChart3, Moon, Sun, Globe, LogIn, LogOut, User, ShieldCheck } from 'lucide-react';
+import { Compass, CheckCircle2, BarChart3, Moon, Sun, Globe, LogIn, LogOut, User, ShieldCheck, UserCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSettings } from '@/app/context/SettingsContext';
 import { useAuth } from '@/app/context/AuthContext';
@@ -35,7 +34,7 @@ import { useToast } from '@/hooks/use-toast';
 export function Navbar() {
   const pathname = usePathname();
   const { theme, toggleTheme, language, setLanguage, t } = useSettings();
-  const { user, loginWithGoogle, loginAsAdmin, logout } = useAuth();
+  const { user, loginWithGoogle, loginAsMockUser, loginAsAdmin, logout } = useAuth();
   const { toast } = useToast();
   
   const [adminUsername, setAdminUsername] = useState('');
@@ -51,6 +50,12 @@ export function Navbar() {
     } else {
       toast({ title: "Invalid credentials", variant: "destructive" });
     }
+  };
+
+  const handleMockLogin = (name: string) => {
+    loginAsMockUser(name);
+    toast({ title: `Logged in as ${name}` });
+    setLoginDialogOpen(false);
   };
 
   const navItems = [
@@ -159,7 +164,21 @@ export function Navbar() {
 
                   <div className="relative">
                     <div className="absolute inset-0 flex items-center"><span className="w-full border-t" /></div>
-                    <div className="relative flex justify-center text-xs uppercase"><span className="bg-background px-2 text-muted-foreground">Or Admin Login</span></div>
+                    <div className="relative flex justify-center text-xs uppercase"><span className="bg-background px-2 text-muted-foreground">Mock Users</span></div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button variant="outline" size="sm" onClick={() => handleMockLogin('Alice')}>
+                      <UserCircle className="mr-2 w-4 h-4" />Alice
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => handleMockLogin('Bob')}>
+                      <UserCircle className="mr-2 w-4 h-4" />Bob
+                    </Button>
+                  </div>
+
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center"><span className="w-full border-t" /></div>
+                    <div className="relative flex justify-center text-xs uppercase"><span className="bg-background px-2 text-muted-foreground">Admin Access</span></div>
                   </div>
 
                   <form onSubmit={handleAdminLogin} className="space-y-4">

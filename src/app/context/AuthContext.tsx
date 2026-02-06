@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
@@ -15,6 +14,7 @@ interface AuthContextType {
   user: AppUser | null;
   loading: boolean;
   loginWithGoogle: () => Promise<void>;
+  loginAsMockUser: (username: string) => Promise<void>;
   loginAsAdmin: (username: string, password: string) => Promise<boolean>;
   logout: () => Promise<void>;
 }
@@ -36,10 +36,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           role: 'user'
         });
       } else {
-        // Check if there's a mocked admin session in localStorage
-        const savedAdmin = localStorage.getItem('task_compass_admin');
-        if (savedAdmin) {
-          setUser(JSON.parse(savedAdmin));
+        const savedSession = localStorage.getItem('task_compass_session');
+        if (savedSession) {
+          setUser(JSON.parse(savedSession));
         } else {
           setUser(null);
         }
@@ -57,6 +56,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const loginAsMockUser = async (username: string) => {
+    const mockUser: AppUser = {
+      uid: `mock-${username.toLowerCase()}`,
+      email: `${username.toLowerCase()}@example.com`,
+      displayName: username,
+      photoURL: null,
+      role: 'user'
+    };
+    setUser(mockUser);
+    localStorage.setItem('task_compass_session', JSON.stringify(mockUser));
+  };
+
   const loginAsAdmin = async (username: string, password: string): Promise<boolean> => {
     if (username === 'admin' && password === 'admin@123') {
       const adminUser: AppUser = {
@@ -67,7 +78,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         role: 'admin'
       };
       setUser(adminUser);
-      localStorage.setItem('task_compass_admin', JSON.stringify(adminUser));
+      localStorage.setItem('task_compass_session', JSON.stringify(adminUser));
       return true;
     }
     return false;
@@ -76,7 +87,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = async () => {
     try {
       await signOut(auth);
-      localStorage.removeItem('task_compass_admin');
+      localStorage.removeItem('task_compass_session');
       setUser(null);
     } catch (error) {
       console.error("Logout failed", error);
@@ -84,7 +95,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, loginWithGoogle, loginAsAdmin, logout }}>
+    <AuthContext.Provider value={{ user, loading, loginWithGoogle, loginAsMockUser, loginAsAdmin, logout }}>
       {children}
     </AuthContext.Provider>
   );
