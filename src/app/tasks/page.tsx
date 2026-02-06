@@ -1,4 +1,3 @@
-
 "use client";
 
 import { TaskProvider, useTasks } from '@/app/context/TaskContext';
@@ -26,6 +25,7 @@ function TasksContent() {
            d.getFullYear() === selectedDate.getFullYear();
   });
 
+  const isAdmin = user?.role === 'admin';
   const adminTasks = dayTasks.filter(t => t.createdBy === 'admin-id');
   const personalTasks = dayTasks.filter(t => t.createdBy !== 'admin-id');
 
@@ -77,21 +77,31 @@ function TasksContent() {
           <TabsContent value="list" className="space-y-8">
             {dayTasks.length > 0 ? (
               <>
-                {user?.role !== 'admin' && adminTasks.length > 0 && (
+                {/* For Admin: Show only their assignments. For User: Show Admin tasks section */}
+                {adminTasks.length > 0 && (
                   <TaskList 
                     items={adminTasks} 
-                    title="From Administrator" 
+                    title={isAdmin ? "Assigned Tasks" : "From Administrator"} 
                     icon={ShieldCheck} 
                     colorClass="text-accent" 
                   />
                 )}
                 
-                <TaskList 
-                  items={user?.role === 'admin' ? dayTasks : personalTasks} 
-                  title={user?.role === 'admin' ? "Global Schedule" : "Personal Tasks"} 
-                  icon={User} 
-                  colorClass="text-primary" 
-                />
+                {/* Personal Tasks: Only visible to regular users */}
+                {!isAdmin && personalTasks.length > 0 && (
+                  <TaskList 
+                    items={personalTasks} 
+                    title="Personal Tasks" 
+                    icon={User} 
+                    colorClass="text-primary" 
+                  />
+                )}
+
+                {isAdmin && adminTasks.length === 0 && (
+                   <div className="text-center py-20 bg-white rounded-xl border border-dashed text-muted-foreground">
+                    You haven't assigned any tasks for this day.
+                  </div>
+                )}
               </>
             ) : (
               <div className="text-center py-20 bg-white rounded-xl border border-dashed text-muted-foreground">

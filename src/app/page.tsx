@@ -1,4 +1,3 @@
-
 "use client";
 
 import { TaskProvider, useTasks } from '@/app/context/TaskContext';
@@ -25,6 +24,7 @@ import { useAuth } from '@/app/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { useRef } from 'react';
 import Link from 'next/link';
+import { cn } from '@/lib/utils';
 
 function DashboardContent() {
   const { tasks, getOverdueTasks, exportTasks, importTasks } = useTasks();
@@ -54,6 +54,8 @@ function DashboardContent() {
       }
     }
   };
+
+  const isAdmin = user?.role === 'admin';
 
   return (
     <div className="min-h-screen pb-32 md:pt-10">
@@ -122,12 +124,17 @@ function DashboardContent() {
             </Button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Column 1: Admin Tasks */}
+          <div className={cn(
+            "grid gap-6",
+            isAdmin ? "grid-cols-1" : "grid-cols-1 md:grid-cols-2"
+          )}>
+            {/* Column 1: Admin Tasks (Visible to both, but Admin only sees what they created) */}
             <div className="space-y-4">
               <div className="flex items-center gap-2 border-b pb-2">
                 <ShieldCheck className="w-4 h-4 text-accent" />
-                <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Admin Assigned</h3>
+                <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
+                  {isAdmin ? "Tasks Assigned to Users" : "From Administrator"}
+                </h3>
               </div>
               <div className="grid gap-3">
                 {adminTasks.length > 0 ? (
@@ -137,29 +144,33 @@ function DashboardContent() {
                     <TaskCard key={task.id} task={task} />
                   ))
                 ) : (
-                  <p className="text-xs text-muted-foreground italic py-4 text-center border rounded-lg border-dashed">No admin tasks today</p>
+                  <p className="text-xs text-muted-foreground italic py-4 text-center border rounded-lg border-dashed">
+                    {isAdmin ? "No tasks assigned for today" : "No admin tasks today"}
+                  </p>
                 )}
               </div>
             </div>
 
-            {/* Column 2: User Tasks */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 border-b pb-2">
-                <User className="w-4 h-4 text-primary" />
-                <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Personal Tasks</h3>
+            {/* Column 2: User Tasks (Hidden from Admin) */}
+            {!isAdmin && (
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 border-b pb-2">
+                  <User className="w-4 h-4 text-primary" />
+                  <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Personal Tasks</h3>
+                </div>
+                <div className="grid gap-3">
+                  {personalTasks.length > 0 ? (
+                    personalTasks
+                      .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
+                      .map(task => (
+                      <TaskCard key={task.id} task={task} />
+                    ))
+                  ) : (
+                    <p className="text-xs text-muted-foreground italic py-4 text-center border rounded-lg border-dashed">No personal tasks today</p>
+                  )}
+                </div>
               </div>
-              <div className="grid gap-3">
-                {personalTasks.length > 0 ? (
-                  personalTasks
-                    .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
-                    .map(task => (
-                    <TaskCard key={task.id} task={task} />
-                  ))
-                ) : (
-                  <p className="text-xs text-muted-foreground italic py-4 text-center border rounded-lg border-dashed">No personal tasks today</p>
-                )}
-              </div>
-            </div>
+            )}
           </div>
 
           {todayTasks.length === 0 && (

@@ -75,8 +75,14 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
 
   const getVisibleTasks = () => {
     if (!user) return [];
-    if (user.role === 'admin') return tasks;
     
+    // Administrator only sees tasks they created (assigned tasks)
+    // They cannot see user-defined private tasks
+    if (user.role === 'admin') {
+      return tasks.filter(t => t.createdBy === user.uid);
+    }
+    
+    // Regular users see tasks they created OR tasks assigned to them
     return tasks.filter(t => 
       t.createdBy === user.uid || 
       t.assignedTo === user.displayName || 
