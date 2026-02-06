@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
@@ -9,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, Calendar as CalendarIcon, UserPlus, Save, Search, User, Check } from 'lucide-react';
+import { Plus, Calendar as CalendarIcon, UserPlus, Save, Search, User, Check, X, GripVertical } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { format } from 'date-fns';
@@ -17,6 +18,7 @@ import { cn } from '@/lib/utils';
 import { useSettings } from '@/app/context/SettingsContext';
 import { useAuth } from '@/app/context/AuthContext';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Badge } from '@/components/ui/badge';
 
 interface TaskFormProps {
   taskToEdit?: Task;
@@ -39,12 +41,11 @@ export function TaskForm({ taskToEdit, open: externalOpen, onOpenChange: setExte
   const [priority, setPriority] = useState<Task['priority']>('Medium');
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [time, setTime] = useState('12:00');
-  const [assignedTo, setAssignedTo] = useState('');
+  const [assignedUsers, setAssignedUsers] = useState<string[]>([]);
   const [userSearch, setUserSearch] = useState('');
 
   const filteredUsers = useMemo(() => {
     const search = userSearch.toLowerCase().trim();
-    if (!search) return knownUsers;
     return knownUsers.filter(u => u.name.toLowerCase().includes(search));
   }, [userSearch, knownUsers]);
 
@@ -56,13 +57,23 @@ export function TaskForm({ taskToEdit, open: externalOpen, onOpenChange: setExte
       setPriority(taskToEdit.priority);
       setDate(new Date(taskToEdit.dueDate));
       setTime(format(new Date(taskToEdit.dueDate), 'HH:mm'));
-      setAssignedTo(taskToEdit.assignedTo || '');
-      setUserSearch('');
+      setAssignedUsers(taskToEdit.assignedTo || []);
     } else if (!taskToEdit && open) {
-      // Reset search when opening for a new task
-      setUserSearch('');
+      setAssignedUsers(user?.role === 'admin' ? [] : [user?.displayName || 'Me']);
     }
-  }, [taskToEdit, open]);
+  }, [taskToEdit, open, user]);
+
+  const toggleUserSelection = (userName: string) => {
+    setAssignedUsers(prev => 
+      prev.includes(userName) 
+        ? prev.filter(u => u !== userName) 
+        : [...prev, userName]
+    );
+  };
+
+  const removeUser = (userName: string) => {
+    setAssignedUsers(prev => prev.filter(u => u !== userName));
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,6 +83,8 @@ export function TaskForm({ taskToEdit, open: externalOpen, onOpenChange: setExte
     const dueDate = new Date(date);
     dueDate.setHours(parseInt(hours), parseInt(minutes));
 
+    const finalAssigned = assignedUsers.length > 0 ? assignedUsers : ['Me'];
+
     if (taskToEdit) {
       updateTask(taskToEdit.id, {
         title,
@@ -79,7 +92,7 @@ export function TaskForm({ taskToEdit, open: externalOpen, onOpenChange: setExte
         category,
         dueDate,
         priority,
-        assignedTo: user?.role === 'admin' ? assignedTo : taskToEdit.assignedTo,
+        assignedTo: finalAssigned,
       });
     } else {
       addTask({
@@ -89,7 +102,7 @@ export function TaskForm({ taskToEdit, open: externalOpen, onOpenChange: setExte
         dueDate,
         completed: false,
         priority,
-        assignedTo: user?.role === 'admin' ? (assignedTo || 'Me') : user?.displayName || user?.email || 'Me',
+        assignedTo: finalAssigned,
         createdBy: user?.uid
       });
     }
@@ -97,7 +110,7 @@ export function TaskForm({ taskToEdit, open: externalOpen, onOpenChange: setExte
     if (!taskToEdit) {
       setTitle('');
       setDescription('');
-      setAssignedTo('');
+      setAssignedUsers([]);
     }
     setOpen(false);
   };
@@ -114,13 +127,13 @@ export function TaskForm({ taskToEdit, open: externalOpen, onOpenChange: setExte
           </Button>
         </DialogTrigger>
       )}
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[450px]">
         <DialogHeader>
           <DialogTitle>
             {taskToEdit ? `Edit Task` : (user?.role === 'admin' ? 'Assign New Task' : t('newTask'))}
           </DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4 pt-4">
+        <form onSubmit={handleSubmit} className="space-y-4 pt-2">
           <div className="space-y-2">
             <Label htmlFor="title">{t('taskTitle')}</Label>
             <Input 
@@ -136,61 +149,74 @@ export function TaskForm({ taskToEdit, open: externalOpen, onOpenChange: setExte
             <div className="space-y-3 bg-muted/30 p-3 rounded-lg border border-dashed">
               <Label className="flex items-center gap-2 mb-1">
                 <UserPlus className="w-4 h-4 text-primary" />
-                Find & Assign User
+                Assign Users (In order of rank)
               </Label>
+              
+              {assignedUsers.length > 0 && (
+                <div className="flex flex-wrap gap-2 p-2 bg-background rounded-md border mb-2">
+                  {assignedUsers.map((u, idx) => (
+                    <Badge key={u} variant="secondary" className={cn(
+                      "flex items-center gap-1 py-1 px-2",
+                      idx === 0 && "bg-primary text-primary-foreground"
+                    )}>
+                      {idx === 0 && <Check className="w-3 h-3" />}
+                      {u}
+                      <button type="button" onClick={() => removeUser(u)} className="ml-1 hover:text-destructive">
+                        <X className="w-3 h-3" />
+                      </button>
+                    </Badge>
+                  ))}
+                </div>
+              )}
+
               <div className="relative">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Type name to search..."
+                  placeholder="Search and select users..."
                   className="pl-9 bg-background"
                   value={userSearch}
                   onChange={(e) => setUserSearch(e.target.value)}
                 />
               </div>
+              
               <ScrollArea className="h-32 rounded-md border bg-background">
                 <div className="p-1 space-y-1">
                   <button
                     type="button"
-                    onClick={() => setAssignedTo('Me')}
+                    onClick={() => toggleUserSelection('Me')}
                     className={cn(
                       "w-full flex items-center justify-between px-3 py-2 text-sm rounded-md transition-colors",
-                      assignedTo === 'Me' ? "bg-primary text-primary-foreground font-bold" : "hover:bg-muted"
+                      assignedUsers.includes('Me') ? "bg-primary/10 text-primary font-bold" : "hover:bg-muted"
                     )}
                   >
                     <div className="flex items-center gap-2">
                       <User className="w-3.5 h-3.5" />
                       Me (Admin)
                     </div>
-                    {assignedTo === 'Me' && <Check className="w-4 h-4" />}
+                    {assignedUsers.includes('Me') && <Check className="w-4 h-4" />}
                   </button>
-                  {filteredUsers.length > 0 ? (
-                    filteredUsers.map(u => (
-                      <button
-                        key={u.id}
-                        type="button"
-                        onClick={() => setAssignedTo(u.name)}
-                        className={cn(
-                          "w-full flex items-center justify-between px-3 py-2 text-sm rounded-md transition-colors",
-                          assignedTo === u.name ? "bg-primary text-primary-foreground font-bold" : "hover:bg-muted"
-                        )}
-                      >
-                        <div className="flex items-center gap-2">
-                          <User className="w-3.5 h-3.5" />
-                          {u.name}
-                        </div>
-                        {assignedTo === u.name && <Check className="w-4 h-4" />}
-                      </button>
-                    ))
-                  ) : (
-                    <div className="text-center py-4 text-xs text-muted-foreground">
-                      No matching users found.
-                    </div>
-                  )}
+                  {filteredUsers.map(u => (
+                    <button
+                      key={u.id}
+                      type="button"
+                      onClick={() => toggleUserSelection(u.name)}
+                      className={cn(
+                        "w-full flex items-center justify-between px-3 py-2 text-sm rounded-md transition-colors",
+                        assignedUsers.includes(u.name) ? "bg-primary/10 text-primary font-bold" : "hover:bg-muted"
+                      )}
+                    >
+                      <div className="flex items-center gap-2">
+                        <User className="w-3.5 h-3.5" />
+                        {u.name}
+                      </div>
+                      {assignedUsers.includes(u.name) && <Check className="w-4 h-4" />}
+                    </button>
+                  ))}
                 </div>
               </ScrollArea>
-              {assignedTo && (
-                <p className="text-[10px] text-primary font-bold uppercase tracking-wider">
-                  Assigned To: <span className="underline">{assignedTo}</span>
+              {assignedUsers.length > 0 && (
+                <p className="text-[10px] text-muted-foreground italic">
+                  * First user in the list is the Primary Responsible Party.
                 </p>
               )}
             </div>
@@ -203,6 +229,7 @@ export function TaskForm({ taskToEdit, open: externalOpen, onOpenChange: setExte
               placeholder={t('descPlaceholder')}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
+              className="h-20"
             />
           </div>
 
@@ -241,39 +268,24 @@ export function TaskForm({ taskToEdit, open: externalOpen, onOpenChange: setExte
               <Label>{t('date')} & Deadline</Label>
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button
-                    variant={"outline"}
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !date && "text-muted-foreground"
-                    )}
-                  >
+                  <Button variant="outline" className="w-full justify-start text-left font-normal">
                     <CalendarIcon className="mr-2 h-4 w-4" />
                     {date ? format(date, "PPP") : <span>Pick a date</span>}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={date}
-                    onSelect={setDate}
-                    initialFocus
-                  />
+                  <Calendar mode="single" selected={date} onSelect={setDate} initialFocus />
                 </PopoverContent>
               </Popover>
             </div>
             
             <div className="space-y-2">
               <Label>{t('time')}</Label>
-              <Input 
-                type="time" 
-                value={time}
-                onChange={(e) => setTime(e.target.value)}
-              />
+              <Input type="time" value={time} onChange={(e) => setTime(e.target.value)} />
             </div>
           </div>
 
-          <Button type="submit" className="w-full bg-accent text-accent-foreground hover:bg-accent/90">
+          <Button type="submit" className="w-full bg-accent text-accent-foreground hover:bg-accent/90 mt-2">
             {taskToEdit ? (
               <span className="flex items-center gap-2"><Save className="w-4 h-4" /> Save Changes</span>
             ) : (

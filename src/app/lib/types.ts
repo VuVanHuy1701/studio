@@ -19,7 +19,7 @@ export interface Task {
   dueDate: Date;
   completed: boolean;
   priority: 'Low' | 'Medium' | 'High';
-  assignedTo?: string; // UID or Name of the user
+  assignedTo: string[]; // List of UIDs or Names, ordered by rank
   createdBy?: string;
   notes?: string; // Feedback for uncompleted admin tasks
 }

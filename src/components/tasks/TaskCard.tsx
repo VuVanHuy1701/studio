@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Task } from '@/app/lib/types';
@@ -16,7 +17,8 @@ import {
   MessageSquare,
   CheckCircle2,
   XCircle,
-  AlertTriangle
+  AlertTriangle,
+  Users
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTasks } from '@/app/context/TaskContext';
@@ -57,13 +59,11 @@ export function TaskCard({ task }: TaskCardProps) {
       const dueDate = new Date(task.dueDate);
       const diffMs = dueDate.getTime() - now.getTime();
       const twoHoursInMs = 2 * 60 * 60 * 1000;
-      
-      // Highlight if deadline is within 2 hours in the future
       setIsUrgentDeadline(diffMs > 0 && diffMs <= twoHoursInMs);
     };
 
     checkUrgency();
-    const interval = setInterval(checkUrgency, 60000); // Re-check every minute
+    const interval = setInterval(checkUrgency, 60000);
     return () => clearInterval(interval);
   }, [task.dueDate, task.completed]);
 
@@ -78,12 +78,23 @@ export function TaskCard({ task }: TaskCardProps) {
   const isAdminCreated = task.createdBy === 'admin-id';
   const isOwner = task.createdBy === user?.uid;
   const isAdmin = user?.role === 'admin';
+  
+  // The first person in the assignedTo list is the "Lead"
+  const leadAssignee = task.assignedTo?.[0] || 'Me';
+  const isLead = leadAssignee === user?.displayName || leadAssignee === user?.email || leadAssignee === user?.uid || (leadAssignee === 'Me' && isAdmin);
+  
   const canDelete = isAdmin || isOwner;
   const canEdit = isAdmin || isOwner;
 
   const handleToggle = () => {
     if (isAdminCreated && !task.completed && !isAdmin) {
-      setProgressDialogOpen(true);
+      // If user is lead, they show the progress review
+      if (isLead) {
+        setProgressDialogOpen(true);
+      } else {
+        // If not lead, standard toggle (but usually we'd want them to see status only)
+        toggleTask(task.id);
+      }
     } else {
       toggleTask(task.id);
     }
@@ -123,7 +134,7 @@ export function TaskCard({ task }: TaskCardProps) {
           
           <div className="flex-1 space-y-1">
             <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <h3 className={cn(
                   "font-semibold text-lg leading-tight transition-all",
                   task.completed && "line-through text-muted-foreground",
@@ -160,7 +171,7 @@ export function TaskCard({ task }: TaskCardProps) {
             {task.notes && (
               <div className="mt-2 p-2 rounded bg-muted/50 border border-dashed text-xs text-muted-foreground">
                 <p className="font-bold flex items-center gap-1 mb-1">
-                  <MessageSquare className="w-3 h-3" /> User Notes:
+                  <MessageSquare className="w-3 h-3" /> User Notes (from {leadAssignee}):
                 </p>
                 {task.notes}
               </div>
@@ -178,14 +189,20 @@ export function TaskCard({ task }: TaskCardProps) {
                 <Tag className="w-3 h-3" />
                 {t(task.category.toLowerCase() as any)}
               </span>
-              {(task.assignedTo || isAdmin) && (
-                <span className={cn(
-                  "flex items-center gap-1",
-                  isAdminCreated ? "text-accent" : "text-primary"
-                )}>
-                  <User className="w-3 h-3" />
-                  {isAdmin ? `To: ${task.assignedTo}` : (task.assignedTo === user?.displayName ? "Assigned to Me" : task.assignedTo)}
-                </span>
+              {task.assignedTo && task.assignedTo.length > 0 && (
+                <div className="flex items-center gap-2">
+                  <Users className="w-3 h-3" />
+                  <div className="flex flex-wrap gap-1">
+                    {task.assignedTo.map((name, i) => (
+                      <span key={name} className={cn(
+                        "px-1.5 rounded-sm border",
+                        i === 0 ? (isAdminCreated ? "bg-accent/20 border-accent/30 text-accent" : "bg-primary/20 border-primary/30 text-primary") : "bg-muted border-muted-foreground/20"
+                      )}>
+                        {name === 'Me' && isAdmin ? "Admin (Lead)" : (i === 0 ? `${name} (Lead)` : name)}
+                      </span>
+                    ))}
+                  </div>
+                </div>
               )}
             </div>
           </div>
@@ -228,8 +245,13 @@ export function TaskCard({ task }: TaskCardProps) {
             </DialogTitle>
           </DialogHeader>
           
+          <div className="bg-muted/30 p-3 rounded-lg border mb-4">
+             <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-1">Lead Assignee Responsibility</p>
+             <p className="text-sm font-medium">As the primary responsible party, you must report the progress for this team task.</p>
+          </div>
+
           {!showNotesInput ? (
-            <div className="space-y-4 py-4">
+            <div className="space-y-4 py-2">
               <p className="text-sm text-muted-foreground">
                 How is the progress on this task assigned by the Administrator?
               </p>
@@ -252,10 +274,10 @@ export function TaskCard({ task }: TaskCardProps) {
               </div>
             </div>
           ) : (
-            <div className="space-y-4 py-4">
+            <div className="space-y-4 py-2">
               <p className="text-sm font-medium">Please provide notes for the Administrator:</p>
               <Textarea 
-                placeholder="Why is the task not completed? Any challenges?" 
+                placeholder="Why is the task not completed? Any challenges for the team?" 
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 className="min-h-[120px]"

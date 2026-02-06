@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
@@ -27,7 +28,11 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
     if (savedTasks) {
       try {
         const parsed = JSON.parse(savedTasks);
-        setTasks(parsed.map((t: any) => ({ ...t, dueDate: new Date(t.dueDate) })));
+        setTasks(parsed.map((t: any) => ({ 
+          ...t, 
+          dueDate: new Date(t.dueDate),
+          assignedTo: Array.isArray(t.assignedTo) ? t.assignedTo : [t.assignedTo || 'Me']
+        })));
       } catch (e) {
         console.error("Failed to parse tasks", e);
       }
@@ -62,32 +67,27 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
     const task = tasks.find(t => t.id === id);
     if (!task) return;
 
-    // Permissions check
     const isOwner = task.createdBy === user?.uid;
     const isAdmin = user?.role === 'admin';
     
     if (isAdmin || isOwner) {
       setTasks(prev => prev.filter(t => t.id !== id));
-    } else {
-      console.warn("Permission denied: Cannot delete tasks assigned by Admin.");
     }
   };
 
   const getVisibleTasks = () => {
     if (!user) return [];
     
-    // Administrator only sees tasks they created (assigned tasks)
-    // They cannot see user-defined private tasks
     if (user.role === 'admin') {
       return tasks.filter(t => t.createdBy === user.uid);
     }
     
-    // Regular users see tasks they created OR tasks assigned to them
     return tasks.filter(t => 
       t.createdBy === user.uid || 
-      t.assignedTo === user.displayName || 
-      t.assignedTo === user.email ||
-      t.assignedTo === user.uid
+      t.assignedTo.includes(user.displayName || '') || 
+      t.assignedTo.includes(user.email || '') ||
+      t.assignedTo.includes(user.uid) ||
+      t.assignedTo.includes('Me')
     );
   };
 
@@ -99,10 +99,9 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
   const exportTasks = () => {
     const dataStr = JSON.stringify(tasks, null, 2);
     const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-    const exportFileDefaultName = `task-compass-backup-${new Date().toISOString().split('T')[0]}.json`;
     const linkElement = document.createElement('a');
     linkElement.setAttribute('href', dataUri);
-    linkElement.setAttribute('download', exportFileDefaultName);
+    linkElement.setAttribute('download', `task-compass-backup-${new Date().toISOString().split('T')[0]}.json`);
     linkElement.click();
   };
 
@@ -113,7 +112,8 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
       if (Array.isArray(importedTasks)) {
         const validatedTasks = importedTasks.map((t: any) => ({
           ...t,
-          dueDate: new Date(t.dueDate)
+          dueDate: new Date(t.dueDate),
+          assignedTo: Array.isArray(t.assignedTo) ? t.assignedTo : [t.assignedTo || 'Me']
         }));
         setTasks(validatedTasks);
         return true;
