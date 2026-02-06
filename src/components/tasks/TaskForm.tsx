@@ -10,9 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, Calendar as CalendarIcon, UserPlus, Save, Search, User, Check, X, GripVertical } from 'lucide-react';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Plus, UserPlus, Save, Search, User, Check, X, Calendar as CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useSettings } from '@/app/context/SettingsContext';
@@ -39,7 +37,7 @@ export function TaskForm({ taskToEdit, open: externalOpen, onOpenChange: setExte
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState<Category>('Work');
   const [priority, setPriority] = useState<Task['priority']>('Medium');
-  const [date, setDate] = useState<Date | undefined>(new Date());
+  const [dateString, setDateString] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [time, setTime] = useState('12:00');
   const [assignedUsers, setAssignedUsers] = useState<string[]>([]);
   const [userSearch, setUserSearch] = useState('');
@@ -55,11 +53,14 @@ export function TaskForm({ taskToEdit, open: externalOpen, onOpenChange: setExte
       setDescription(taskToEdit.description || '');
       setCategory(taskToEdit.category);
       setPriority(taskToEdit.priority);
-      setDate(new Date(taskToEdit.dueDate));
-      setTime(format(new Date(taskToEdit.dueDate), 'HH:mm'));
+      const d = new Date(taskToEdit.dueDate);
+      setDateString(format(d, 'yyyy-MM-dd'));
+      setTime(format(d, 'HH:mm'));
       setAssignedUsers(taskToEdit.assignedTo || []);
     } else if (!taskToEdit && open) {
       setAssignedUsers(user?.role === 'admin' ? [] : [user?.displayName || 'Me']);
+      setDateString(format(new Date(), 'yyyy-MM-dd'));
+      setTime('12:00');
     }
   }, [taskToEdit, open, user]);
 
@@ -77,11 +78,11 @@ export function TaskForm({ taskToEdit, open: externalOpen, onOpenChange: setExte
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title || !date) return;
+    if (!title || !dateString) return;
 
-    const [hours, minutes] = time.split(':');
-    const dueDate = new Date(date);
-    dueDate.setHours(parseInt(hours), parseInt(minutes));
+    const [year, month, day] = dateString.split('-').map(Number);
+    const [hours, minutes] = time.split(':').map(Number);
+    const dueDate = new Date(year, month - 1, day, hours, minutes);
 
     const finalAssigned = assignedUsers.length > 0 ? assignedUsers : ['Me'];
 
@@ -265,23 +266,26 @@ export function TaskForm({ taskToEdit, open: externalOpen, onOpenChange: setExte
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>{t('date')} & Deadline</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" className="w-full justify-start text-left font-normal">
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {date ? format(date, "PPP") : <span>Pick a date</span>}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar mode="single" selected={date} onSelect={setDate} initialFocus />
-                </PopoverContent>
-              </Popover>
+              <Label htmlFor="due-date">{t('date')} & Deadline</Label>
+              <div className="relative">
+                <Input 
+                  id="due-date" 
+                  type="date" 
+                  value={dateString} 
+                  onChange={(e) => setDateString(e.target.value)} 
+                  className="w-full"
+                />
+              </div>
             </div>
             
             <div className="space-y-2">
-              <Label>{t('time')}</Label>
-              <Input type="time" value={time} onChange={(e) => setTime(e.target.value)} />
+              <Label htmlFor="due-time">{t('time')}</Label>
+              <Input 
+                id="due-time"
+                type="time" 
+                value={time} 
+                onChange={(e) => setTime(e.target.value)} 
+              />
             </div>
           </div>
 
