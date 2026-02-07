@@ -11,7 +11,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
-import { Plus, UserPlus, Save, Search, User, Check, X, Calendar as CalendarIcon, Clock } from 'lucide-react';
+import { Slider } from '@/components/ui/slider';
+import { Plus, UserPlus, Save, Search, User, Check, X, Calendar as CalendarIcon, Clock, Percent } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useSettings } from '@/app/context/SettingsContext';
@@ -43,6 +44,7 @@ export function TaskForm({ taskToEdit, open: externalOpen, onOpenChange: setExte
   const [assignedUsers, setAssignedUsers] = useState<string[]>([]);
   const [userSearch, setUserSearch] = useState('');
   const [additionalTimeAllocated, setAdditionalTimeAllocated] = useState(false);
+  const [progress, setProgress] = useState(0);
 
   const filteredUsers = useMemo(() => {
     const search = userSearch.toLowerCase().trim();
@@ -60,11 +62,15 @@ export function TaskForm({ taskToEdit, open: externalOpen, onOpenChange: setExte
       setTime(format(d, 'HH:mm'));
       setAssignedUsers(taskToEdit.assignedTo || []);
       setAdditionalTimeAllocated(taskToEdit.additionalTimeAllocated || false);
+      setProgress(taskToEdit.progress || 0);
     } else if (!taskToEdit && open) {
       setAssignedUsers(user?.role === 'admin' ? [] : [user?.displayName || 'Me']);
       setDateString(format(new Date(), 'yyyy-MM-dd'));
       setTime('16:30');
       setAdditionalTimeAllocated(false);
+      setProgress(0);
+      setTitle('');
+      setDescription('');
     }
   }, [taskToEdit, open, user]);
 
@@ -98,7 +104,9 @@ export function TaskForm({ taskToEdit, open: externalOpen, onOpenChange: setExte
         dueDate,
         priority,
         assignedTo: finalAssigned,
-        additionalTimeAllocated
+        additionalTimeAllocated,
+        progress,
+        completed: progress === 100
       });
     } else {
       addTask({
@@ -106,19 +114,15 @@ export function TaskForm({ taskToEdit, open: externalOpen, onOpenChange: setExte
         description,
         category,
         dueDate,
-        completed: false,
+        completed: progress === 100,
         priority,
         assignedTo: finalAssigned,
         createdBy: user?.uid,
-        additionalTimeAllocated
+        additionalTimeAllocated,
+        progress
       });
     }
 
-    if (!taskToEdit) {
-      setTitle('');
-      setDescription('');
-      setAssignedUsers([]);
-    }
     setOpen(false);
   };
 
@@ -237,6 +241,23 @@ export function TaskForm({ taskToEdit, open: externalOpen, onOpenChange: setExte
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               className="h-20"
+            />
+          </div>
+
+          <div className="space-y-4 py-2 px-1">
+            <div className="flex items-center justify-between">
+              <Label className="flex items-center gap-2">
+                <Percent className="w-4 h-4 text-primary" />
+                Task Progress
+              </Label>
+              <span className="text-sm font-bold text-primary">{progress}%</span>
+            </div>
+            <Slider 
+              value={[progress]} 
+              onValueChange={(val) => setProgress(val[0])} 
+              max={100} 
+              step={1} 
+              className="py-1"
             />
           </div>
 

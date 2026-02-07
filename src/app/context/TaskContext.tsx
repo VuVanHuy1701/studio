@@ -32,7 +32,8 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
           ...t, 
           dueDate: new Date(t.dueDate),
           completedAt: t.completedAt ? new Date(t.completedAt) : undefined,
-          assignedTo: Array.isArray(t.assignedTo) ? t.assignedTo : [t.assignedTo || 'Me']
+          assignedTo: Array.isArray(t.assignedTo) ? t.assignedTo : [t.assignedTo || 'Me'],
+          progress: t.progress ?? (t.completed ? 100 : 0)
         })));
       } catch (e) {
         console.error("Failed to parse tasks", e);
@@ -59,7 +60,8 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
         return { 
           ...task, 
           completed: isNowCompleted,
-          completedAt: isNowCompleted ? new Date() : undefined
+          completedAt: isNowCompleted ? new Date() : undefined,
+          progress: isNowCompleted ? 100 : task.progress
         };
       }
       return task;
@@ -79,7 +81,10 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
           completedAt = undefined;
         }
 
-        return { ...task, ...updates, completedAt };
+        let progress = updates.progress !== undefined ? updates.progress : task.progress;
+        if (isNowCompleted) progress = 100;
+
+        return { ...task, ...updates, completedAt, progress };
       }
       return task;
     }));
@@ -136,7 +141,8 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
           ...t,
           dueDate: new Date(t.dueDate),
           completedAt: t.completedAt ? new Date(t.completedAt) : undefined,
-          assignedTo: Array.isArray(t.assignedTo) ? t.assignedTo : [t.assignedTo || 'Me']
+          assignedTo: Array.isArray(t.assignedTo) ? t.assignedTo : [t.assignedTo || 'Me'],
+          progress: t.progress ?? (t.completed ? 100 : 0)
         }));
         setTasks(validatedTasks);
         return true;

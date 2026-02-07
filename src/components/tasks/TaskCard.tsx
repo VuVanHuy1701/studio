@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
 import { 
   Trash2, 
   Clock, 
@@ -20,7 +21,8 @@ import {
   AlertTriangle,
   Users,
   AlertCircle,
-  CalendarClock
+  CalendarClock,
+  Activity
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTasks } from '@/app/context/TaskContext';
@@ -115,7 +117,7 @@ export function TaskCard({ task }: TaskCardProps) {
   };
 
   const handleMarkComplete = () => {
-    updateTask(task.id, { completed: true });
+    updateTask(task.id, { completed: true, progress: 100 });
     setProgressDialogOpen(false);
     toast({ title: "Task Completed" });
   };
@@ -165,7 +167,7 @@ export function TaskCard({ task }: TaskCardProps) {
             </TooltipProvider>
           </div>
           
-          <div className="flex-1 space-y-1">
+          <div className="flex-1 space-y-2">
             <div className="flex items-center justify-between gap-2">
               <div className="flex flex-wrap items-center gap-2">
                 <h3 className={cn(
@@ -207,6 +209,19 @@ export function TaskCard({ task }: TaskCardProps) {
               </p>
             )}
 
+            {!task.completed && task.progress !== undefined && (
+              <div className="space-y-1.5 py-1">
+                <div className="flex items-center justify-between text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                  <span className="flex items-center gap-1">
+                    <Activity className="w-3 h-3 text-primary" />
+                    Progress
+                  </span>
+                  <span>{task.progress}%</span>
+                </div>
+                <Progress value={task.progress} className="h-1" />
+              </div>
+            )}
+
             {task.additionalTimeAllocated && !task.completed && (
               <div className="mt-2 flex items-center gap-2 p-2 rounded bg-accent/10 border border-accent/30 text-[10px] font-bold text-accent animate-in fade-in slide-in-from-left-2">
                 <CalendarClock className="w-3.5 h-3.5" />
@@ -223,7 +238,7 @@ export function TaskCard({ task }: TaskCardProps) {
               </div>
             )}
             
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 pt-2 text-[11px] text-muted-foreground uppercase tracking-wider font-bold">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 pt-1 text-[11px] text-muted-foreground uppercase tracking-wider font-bold">
               <span className={cn(
                 "flex items-center gap-1 flex-wrap",
                 (isUrgentDeadline || isOverdue) && "text-destructive"

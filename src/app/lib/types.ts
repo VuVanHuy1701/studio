@@ -24,6 +24,7 @@ export interface Task {
   createdBy?: string;
   notes?: string; // Feedback for uncompleted admin tasks
   additionalTimeAllocated?: boolean; // New flag for extended deadlines
+  progress?: number; // Task completion percentage (0-100)
 }
 
 export interface ProgressStats {
