@@ -18,7 +18,7 @@ import {
   User,
   AlertCircle
 } from 'lucide-react';
-import { format, isToday } from 'date-fns';
+import { format, isToday, startOfWeek } from 'date-fns';
 import { useSettings } from '@/app/context/SettingsContext';
 import { useAuth } from '@/app/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -58,6 +58,14 @@ function DashboardContent() {
   const progress = totalToday > 0 ? (completedToday / totalToday) * 100 : 0;
   
   const overdue = getOverdueTasks();
+
+  // Calculate tasks finished this week (starting Monday)
+  const startOfThisWeek = startOfWeek(new Date(), { weekStartsOn: 1 });
+  const completedThisWeek = tasks.filter(t => 
+    t.completed && 
+    t.completedAt && 
+    new Date(t.completedAt) >= startOfThisWeek
+  ).length;
 
   const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -111,7 +119,7 @@ function DashboardContent() {
           <Card className="border-none shadow-sm">
             <CardContent className="p-3 md:p-4">
               <h3 className="text-[8px] md:text-[10px] font-bold text-muted-foreground uppercase mb-0.5 md:mb-1 tracking-wider">{t('weeklySummary')}</h3>
-              <div className="text-xl md:text-3xl font-bold text-primary">12</div>
+              <div className="text-xl md:text-3xl font-bold text-primary">{completedThisWeek}</div>
               <p className="text-[8px] md:text-[10px] text-muted-foreground mt-1 font-medium">{t('tasksFinishedWeek')}</p>
             </CardContent>
           </Card>
