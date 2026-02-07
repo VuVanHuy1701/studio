@@ -81,57 +81,57 @@ function DashboardContent() {
     <div className="min-h-screen pb-32 md:pb-10 md:pt-10">
       <Navbar />
       
-      <main className="max-w-5xl mx-auto px-4 py-8 space-y-8">
-        <header className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <main className="max-w-5xl mx-auto px-4 py-4 md:py-8 space-y-6 md:space-y-8">
+        <header className="flex flex-row items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-primary tracking-tight">{t('todaysCompass')}</h1>
-            <p className="text-muted-foreground font-medium">{format(new Date(), 'EEEE, MMMM do')}</p>
+            <h1 className="text-xl md:text-3xl font-bold text-primary tracking-tight leading-none">{t('todaysCompass')}</h1>
+            <p className="text-[10px] md:text-sm text-muted-foreground font-medium mt-1">{format(new Date(), 'EEEE, MMMM do')}</p>
           </div>
           {user && (
-            <div className="text-left sm:text-right bg-white/50 backdrop-blur-sm px-4 py-2 rounded-xl border border-dashed border-primary/20">
-              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{t('welcome')}</p>
-              <p className="font-bold text-primary">{user.displayName}</p>
+            <div className="text-right bg-white/50 backdrop-blur-sm px-3 py-1.5 md:px-4 md:py-2 rounded-xl border border-dashed border-primary/20">
+              <p className="text-[8px] md:text-[10px] font-bold text-muted-foreground uppercase tracking-widest leading-none">Welcome</p>
+              <p className="font-bold text-primary text-xs md:text-base">{user.displayName}</p>
             </div>
           )}
         </header>
 
-        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <section className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
           <Card className="border-none shadow-sm bg-primary text-primary-foreground overflow-hidden relative">
-            <div className="absolute top-0 right-0 p-3 opacity-10">
-              <CheckCircle2 className="w-12 h-12" />
+            <div className="absolute top-0 right-0 p-2 md:p-3 opacity-10">
+              <CheckCircle2 className="w-8 h-8 md:w-12 md:h-12" />
             </div>
-            <CardContent className="p-4 sm:p-5">
-              <h3 className="text-[10px] font-bold uppercase opacity-80 mb-1">{t('dailyFocus')}</h3>
-              <div className="text-3xl font-bold mb-2">{completedToday}/{totalToday}</div>
-              <Progress value={progress} className="h-1.5 bg-white/20" />
-              <p className="text-[10px] mt-2 opacity-80 font-medium">{t('tasksCompleted')}</p>
+            <CardContent className="p-3 md:p-4">
+              <h3 className="text-[8px] md:text-[10px] font-bold uppercase opacity-80 mb-0.5 md:mb-1">{t('dailyFocus')}</h3>
+              <div className="text-xl md:text-3xl font-bold mb-1 md:mb-2">{completedToday}/{totalToday}</div>
+              <Progress value={progress} className="h-1 bg-white/20" />
+              <p className="text-[8px] md:text-[10px] mt-1.5 md:mt-2 opacity-80 font-medium">{t('tasksCompleted')}</p>
             </CardContent>
           </Card>
 
           <Card className="border-none shadow-sm">
-            <CardContent className="p-4 sm:p-5">
-              <h3 className="text-[10px] font-bold text-muted-foreground uppercase mb-1 tracking-wider">{t('weeklySummary')}</h3>
-              <div className="text-3xl font-bold text-primary">12</div>
-              <p className="text-[10px] text-muted-foreground mt-1 font-medium">{t('tasksFinishedWeek')}</p>
+            <CardContent className="p-3 md:p-4">
+              <h3 className="text-[8px] md:text-[10px] font-bold text-muted-foreground uppercase mb-0.5 md:mb-1 tracking-wider">{t('weeklySummary')}</h3>
+              <div className="text-xl md:text-3xl font-bold text-primary">12</div>
+              <p className="text-[8px] md:text-[10px] text-muted-foreground mt-1 font-medium">{t('tasksFinishedWeek')}</p>
             </CardContent>
           </Card>
 
-          <Card className="border-none shadow-sm border-l-4 border-l-destructive sm:col-span-2 lg:col-span-1">
-            <CardContent className="p-4 sm:p-5">
-              <h3 className="text-[10px] font-bold text-destructive uppercase mb-1 tracking-wider">{t('overdue')}</h3>
-              <div className="text-3xl font-bold text-destructive">{overdue.length}</div>
-              <p className="text-[10px] text-muted-foreground mt-1 font-medium">{t('needsAttention')}</p>
+          <Card className="border-none shadow-sm border-l-4 border-l-destructive col-span-2 md:col-span-1">
+            <CardContent className="p-3 md:p-4">
+              <h3 className="text-[8px] md:text-[10px] font-bold text-destructive uppercase mb-0.5 md:mb-1 tracking-wider">{t('overdue')}</h3>
+              <div className="text-xl md:text-3xl font-bold text-destructive">{overdue.length}</div>
+              <p className="text-[8px] md:text-[10px] text-muted-foreground mt-1 font-medium">{t('needsAttention')}</p>
             </CardContent>
           </Card>
         </section>
 
         {overdue.length > 0 && (
-          <section className="space-y-4">
+          <section className="space-y-3">
             <div className="flex items-center gap-2 text-destructive">
-              <AlertCircle className="w-5 h-5" />
-              <h2 className="text-xl font-bold">Overdue Tasks</h2>
+              <AlertCircle className="w-4 h-4" />
+              <h2 className="text-sm md:text-lg font-bold">Overdue Tasks</h2>
             </div>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
               {overdue.map(task => (
                 <TaskCard key={task.id} task={task} />
               ))}
@@ -139,38 +139,38 @@ function DashboardContent() {
           </section>
         )}
 
-        <section className="space-y-6">
+        <section className="space-y-4 md:space-y-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-primary" />
+            <h2 className="text-base md:text-xl font-bold flex items-center gap-2">
+              <Calendar className="w-4 h-4 md:w-5 md:h-5 text-primary" />
               {t('upcomingToday')}
             </h2>
-            <Button variant="ghost" size="sm" className="text-primary font-bold hover:bg-primary/5" asChild>
+            <Button variant="ghost" size="sm" className="h-8 md:h-9 text-[10px] md:text-sm text-primary font-bold hover:bg-primary/5" asChild>
               <Link href="/tasks">
-                View All <ArrowRight className="ml-2 w-4 h-4" />
+                View All <ArrowRight className="ml-1 w-3 h-3 md:w-4 md:h-4" />
               </Link>
             </Button>
           </div>
 
           <div className={cn(
-            "grid gap-8",
+            "grid gap-6 md:gap-8",
             isAdmin ? "grid-cols-1" : "grid-cols-1 lg:grid-cols-2"
           )}>
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 border-b border-primary/10 pb-2">
-                <ShieldCheck className="w-4 h-4 text-accent" />
-                <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 border-b border-primary/10 pb-1.5 md:pb-2">
+                <ShieldCheck className="w-3 h-3 md:w-4 md:h-4 text-accent" />
+                <h3 className="text-[9px] md:text-xs font-bold uppercase tracking-widest text-muted-foreground">
                   {isAdmin ? "Tasks Assigned to Users" : "From Administrator"}
                 </h3>
               </div>
-              <div className="grid gap-4">
+              <div className="grid gap-3 md:gap-4">
                 {adminTasks.length > 0 ? (
                   adminTasks.map(task => (
                     <TaskCard key={task.id} task={task} />
                   ))
                 ) : (
-                  <div className="text-center py-10 border-2 border-dashed rounded-2xl border-primary/5 bg-muted/20">
-                    <p className="text-sm text-muted-foreground italic">
+                  <div className="text-center py-6 md:py-10 border-2 border-dashed rounded-2xl border-primary/5 bg-muted/20">
+                    <p className="text-[10px] md:text-sm text-muted-foreground italic">
                       {isAdmin ? "No tasks assigned for today" : "No admin tasks today"}
                     </p>
                   </div>
@@ -179,19 +179,19 @@ function DashboardContent() {
             </div>
 
             {!isAdmin && (
-              <div className="space-y-4">
-                <div className="flex items-center gap-2 border-b border-primary/10 pb-2">
-                  <User className="w-4 h-4 text-primary" />
-                  <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Personal Tasks</h3>
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 border-b border-primary/10 pb-1.5 md:pb-2">
+                  <User className="w-3 h-3 md:w-4 md:h-4 text-primary" />
+                  <h3 className="text-[9px] md:text-xs font-bold uppercase tracking-widest text-muted-foreground">Personal Tasks</h3>
                 </div>
-                <div className="grid gap-4">
+                <div className="grid gap-3 md:gap-4">
                   {personalTasks.length > 0 ? (
                     personalTasks.map(task => (
                       <TaskCard key={task.id} task={task} />
                     ))
                   ) : (
-                    <div className="text-center py-10 border-2 border-dashed rounded-2xl border-primary/5 bg-muted/20">
-                      <p className="text-sm text-muted-foreground italic">No personal tasks today</p>
+                    <div className="text-center py-6 md:py-10 border-2 border-dashed rounded-2xl border-primary/5 bg-muted/20">
+                      <p className="text-[10px] md:text-sm text-muted-foreground italic">No personal tasks today</p>
                     </div>
                   )}
                 </div>
@@ -200,39 +200,39 @@ function DashboardContent() {
           </div>
 
           {todayTasks.length === 0 && overdue.length === 0 && (
-            <div className="text-center py-16 bg-white rounded-3xl border border-dashed text-muted-foreground flex flex-col items-center gap-4 shadow-sm">
-              <div className="bg-primary/10 p-4 rounded-full">
-                <CheckCircle2 className="w-10 h-10 text-primary opacity-40" />
+            <div className="text-center py-10 md:py-16 bg-white rounded-3xl border border-dashed text-muted-foreground flex flex-col items-center gap-3 md:gap-4 shadow-sm">
+              <div className="bg-primary/10 p-3 md:p-4 rounded-full">
+                <CheckCircle2 className="w-8 h-8 md:w-10 md:h-10 text-primary opacity-40" />
               </div>
               <div className="space-y-1">
-                <p className="text-lg font-bold text-foreground">{t('noTasksToday')}</p>
-                <p className="text-sm">{t('enjoyClearDay')}</p>
+                <p className="text-sm md:text-lg font-bold text-foreground">{t('noTasksToday')}</p>
+                <p className="text-xs md:text-sm">{t('enjoyClearDay')}</p>
               </div>
             </div>
           )}
         </section>
 
-        <section className="pt-8">
-          <Card className="border-none shadow-sm bg-muted/40 rounded-3xl overflow-hidden">
-            <CardContent className="p-6 sm:p-8 space-y-6">
-              <div className="space-y-2">
-                <h3 className="text-xl font-bold flex items-center gap-3 text-primary">
-                  <div className="bg-primary/10 p-2 rounded-lg">
-                    <Database className="w-5 h-5" />
+        <section className="pt-4 md:pt-8">
+          <Card className="border-none shadow-sm bg-muted/40 rounded-2xl md:rounded-3xl overflow-hidden">
+            <CardContent className="p-5 md:p-8 space-y-4 md:space-y-6">
+              <div className="space-y-1 md:space-y-2">
+                <h3 className="text-base md:text-xl font-bold flex items-center gap-2 md:gap-3 text-primary">
+                  <div className="bg-primary/10 p-1.5 md:p-2 rounded-lg">
+                    <Database className="w-4 h-4 md:w-5 md:h-5" />
                   </div>
                   {t('dataManagement')}
                 </h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">
+                <p className="text-[10px] md:text-sm text-muted-foreground leading-relaxed">
                   Backup your tasks or sync with your personal storage. Your data is kept locally for maximum privacy and performance.
                 </p>
               </div>
-              <div className="flex flex-col sm:flex-row gap-3">
-                <Button onClick={exportTasks} variant="outline" className="flex-1 rounded-xl h-12 font-bold">
-                  <Download className="mr-2 w-4 h-4 text-primary" />
+              <div className="flex flex-col sm:flex-row gap-2 md:gap-3">
+                <Button onClick={exportTasks} variant="outline" className="h-10 md:h-12 text-xs md:text-sm font-bold flex-1">
+                  <Download className="mr-1.5 w-3.5 h-3.5 md:w-4 md:h-4 text-primary" />
                   {t('exportJson')}
                 </Button>
-                <Button onClick={() => fileInputRef.current?.click()} variant="outline" className="flex-1 rounded-xl h-12 font-bold">
-                  <Upload className="mr-2 w-4 h-4 text-primary" />
+                <Button onClick={() => fileInputRef.current?.click()} variant="outline" className="h-10 md:h-12 text-xs md:text-sm font-bold flex-1">
+                  <Upload className="mr-1.5 w-3.5 h-3.5 md:w-4 md:h-4 text-primary" />
                   {t('importJson')}
                 </Button>
                 <input 
@@ -243,8 +243,8 @@ function DashboardContent() {
                   onChange={handleImport}
                 />
               </div>
-              <div className="flex items-center gap-3 text-[11px] font-bold text-muted-foreground bg-white/60 p-4 rounded-2xl border border-dashed border-primary/20">
-                <div className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
+              <div className="flex items-center gap-2 md:gap-3 text-[9px] md:text-[11px] font-bold text-muted-foreground bg-white/60 p-3 md:p-4 rounded-xl md:rounded-2xl border border-dashed border-primary/20">
+                <div className="w-2 h-2 md:w-2.5 md:h-2.5 rounded-full bg-green-500 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
                 <span className="uppercase tracking-widest">{t('syncStatus')}</span>
               </div>
             </CardContent>
