@@ -295,7 +295,7 @@ export function TaskCard({ task }: TaskCardProps) {
                 variant="ghost" 
                 size="icon" 
                 onClick={() => setIsEditing(true)}
-                className="h-7 w-7 md:h-8 md:w-8 opacity-0 md:group-hover:opacity-100 transition-opacity text-muted-foreground hover:bg-primary/10"
+                className="h-7 w-7 md:h-8 md:w-8 text-muted-foreground hover:bg-primary/10 transition-colors"
               >
                 <Edit3 className="w-3.5 h-3.5 md:w-4 md:h-4" />
               </Button>
@@ -305,7 +305,7 @@ export function TaskCard({ task }: TaskCardProps) {
                 variant="ghost" 
                 size="icon" 
                 onClick={() => deleteTask(task.id)}
-                className="h-7 w-7 md:h-8 md:w-8 opacity-0 md:group-hover:opacity-100 transition-opacity text-destructive hover:bg-destructive/10"
+                className="h-7 w-7 md:h-8 md:w-8 text-destructive hover:bg-destructive/10 transition-colors"
               >
                 <Trash2 className="w-3.5 h-3.5 md:w-4 md:h-4" />
               </Button>
