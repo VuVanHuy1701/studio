@@ -6,6 +6,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { Slider } from '@/components/ui/slider';
 import { 
   Trash2, 
   Clock, 
@@ -20,7 +21,8 @@ import {
   Users,
   AlertCircle,
   CalendarClock,
-  Activity
+  Activity,
+  Percent
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTasks } from '@/app/context/TaskContext';
@@ -37,6 +39,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import {
   Tooltip,
   TooltipContent,
@@ -56,6 +59,7 @@ export function TaskCard({ task }: TaskCardProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [progressDialogOpen, setProgressDialogOpen] = useState(false);
   const [notes, setNotes] = useState(task.notes || '');
+  const [localProgress, setLocalProgress] = useState(task.progress || 0);
   const [showNotesInput, setShowNotesInput] = useState(false);
   const [isUrgentDeadline, setIsUrgentDeadline] = useState(false);
 
@@ -70,7 +74,6 @@ export function TaskCard({ task }: TaskCardProps) {
       const now = new Date();
       const dueDate = new Date(task.dueDate);
       const diffMs = dueDate.getTime() - now.getTime();
-      // Highlight tasks within 1 hour of deadline
       const oneHourInMs = 1 * 60 * 60 * 1000;
       setIsUrgentDeadline(diffMs > 0 && diffMs <= oneHourInMs);
     };
@@ -79,6 +82,15 @@ export function TaskCard({ task }: TaskCardProps) {
     const interval = setInterval(checkUrgency, 60000);
     return () => clearInterval(interval);
   }, [task.dueDate, task.completed]);
+
+  // Reset local state when dialog opens/closes
+  useEffect(() => {
+    if (progressDialogOpen) {
+      setNotes(task.notes || '');
+      setLocalProgress(task.progress || 0);
+      setShowNotesInput(false);
+    }
+  }, [progressDialogOpen, task.notes, task.progress]);
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -125,9 +137,14 @@ export function TaskCard({ task }: TaskCardProps) {
   };
 
   const handleSaveNotes = () => {
-    updateTask(task.id, { notes: notes, completed: false });
+    updateTask(task.id, { 
+      notes: notes, 
+      completed: localProgress === 100, 
+      progress: localProgress 
+    });
     setProgressDialogOpen(false);
     setShowNotesInput(false);
+    toast({ title: "Progress Updated" });
   };
 
   return (
@@ -339,16 +356,36 @@ export function TaskCard({ task }: TaskCardProps) {
               </div>
             </div>
           ) : (
-            <div className="space-y-4 py-2">
-              <p className="text-sm font-medium">Please provide notes for the Administrator:</p>
-              <Textarea 
-                placeholder="Why is the task not completed? Any challenges for the team?" 
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                className="min-h-[120px]"
-              />
-              <Button onClick={handleSaveNotes} className="w-full bg-accent text-accent-foreground">
-                Submit Progress Notes
+            <div className="space-y-6 py-2">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label className="flex items-center gap-2 text-xs font-bold uppercase text-muted-foreground">
+                    <Percent className="w-3.5 h-3.5 text-primary" />
+                    Updated Progress
+                  </Label>
+                  <span className="text-sm font-black text-primary">{localProgress}%</span>
+                </div>
+                <Slider 
+                  value={[localProgress]} 
+                  onValueChange={(val) => setLocalProgress(val[0])} 
+                  max={100} 
+                  step={1} 
+                  className="py-1"
+                />
+              </div>
+
+              <div className="space-y-3">
+                <Label className="text-sm font-medium">Progress Notes for Administrator:</Label>
+                <Textarea 
+                  placeholder="Why is the task not completed? Any challenges for the team?" 
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  className="min-h-[120px]"
+                />
+              </div>
+
+              <Button onClick={handleSaveNotes} className="w-full bg-accent text-accent-foreground font-bold h-12 uppercase tracking-wide">
+                Submit Progress & Notes
               </Button>
             </div>
           )}
