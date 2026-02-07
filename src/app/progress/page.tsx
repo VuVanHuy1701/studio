@@ -1,4 +1,3 @@
-
 "use client";
 
 import { TaskProvider, useTasks } from '@/app/context/TaskContext';
@@ -19,6 +18,7 @@ import { format, subDays, isSameDay } from 'date-fns';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ChartContainer, ChartTooltipContent, type ChartConfig } from '@/components/ui/chart';
 import { useSettings } from '@/app/context/SettingsContext';
+import { useState, useEffect } from 'react';
 
 const chartConfig = {
   completed: {
@@ -34,23 +34,38 @@ const chartConfig = {
 function ProgressContent() {
   const { tasks } = useTasks();
   const { t } = useSettings();
+  const [mounted, setMounted] = useState(false);
 
-  // Mock historical data generation for demonstration
-  const generateStats = (days: number) => {
-    return Array.from({ length: days }).map((_, i) => {
-      const date = subDays(new Date(), days - 1 - i);
-      const dayTasks = tasks.filter(t => isSameDay(t.dueDate, date));
-      return {
-        date: format(date, 'MMM dd'),
-        completed: dayTasks.filter(t => t.completed).length,
-        total: dayTasks.length,
-        rate: dayTasks.length > 0 ? (dayTasks.filter(t => t.completed).length / dayTasks.length) * 100 : 0
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Use a state for stats to ensure consistency between server and client
+  const [dailyStats, setDailyStats] = useState<any[]>([]);
+  const [monthlyStats, setMonthlyStats] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (mounted) {
+      const generateStats = (days: number) => {
+        return Array.from({ length: days }).map((_, i) => {
+          const date = subDays(new Date(), days - 1 - i);
+          const dayTasks = tasks.filter(t => isSameDay(t.dueDate, date));
+          return {
+            date: format(date, 'MMM dd'),
+            completed: dayTasks.filter(t => t.completed).length,
+            total: dayTasks.length,
+            rate: dayTasks.length > 0 ? (dayTasks.filter(t => t.completed).length / dayTasks.length) * 100 : 0
+          };
+        });
       };
-    });
-  };
+      setDailyStats(generateStats(7));
+      setMonthlyStats(generateStats(30));
+    }
+  }, [mounted, tasks]);
 
-  const dailyStats = generateStats(7);
-  const monthlyStats = generateStats(30);
+  if (!mounted) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen pb-24 md:pt-20">
@@ -96,7 +111,7 @@ function ProgressContent() {
                 </CardHeader>
                 <CardContent className="p-4 pt-0">
                   <div className="text-3xl font-bold">
-                    {Math.round(dailyStats.reduce((acc, curr) => acc + curr.rate, 0) / 7)}%
+                    {dailyStats.length > 0 ? Math.round(dailyStats.reduce((acc, curr) => acc + curr.rate, 0) / 7) : 0}%
                   </div>
                 </CardContent>
               </Card>
@@ -106,7 +121,7 @@ function ProgressContent() {
                 </CardHeader>
                 <CardContent className="p-4 pt-0">
                   <div className="text-3xl font-bold text-accent">
-                    {Math.max(...dailyStats.map(s => s.completed))}
+                    {dailyStats.length > 0 ? Math.max(...dailyStats.map(s => s.completed)) : 0}
                   </div>
                   <p className="text-[10px] text-muted-foreground">Tasks in a day</p>
                 </CardContent>
@@ -155,7 +170,7 @@ function ProgressContent() {
                   </li>
                   <li className="flex items-start gap-2">
                     <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5" />
-                    <span>Your peak performance was around <strong>{monthlyStats.sort((a,b) => b.completed - a.completed)[0]?.date}</strong></span>
+                    <span>Your peak performance was around <strong>{monthlyStats.sort((a,b) => b.completed - a.completed)[0]?.date || '...'}</strong></span>
                   </li>
                 </ul>
               </CardContent>

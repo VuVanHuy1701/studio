@@ -1,4 +1,3 @@
-
 "use client";
 
 import { TaskProvider, useTasks } from '@/app/context/TaskContext';
@@ -23,7 +22,7 @@ import { format, isToday } from 'date-fns';
 import { useSettings } from '@/app/context/SettingsContext';
 import { useAuth } from '@/app/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { useRef } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { Task } from '@/app/lib/types';
@@ -34,6 +33,11 @@ function DashboardContent() {
   const { user } = useAuth();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const todayTasks = tasks.filter(t => isToday(new Date(t.dueDate)));
   
@@ -68,6 +72,10 @@ function DashboardContent() {
   };
 
   const isAdmin = user?.role === 'admin';
+
+  if (!mounted) {
+    return null; // Prevent hydration mismatch
+  }
 
   return (
     <div className="min-h-screen pb-32 md:pt-10">

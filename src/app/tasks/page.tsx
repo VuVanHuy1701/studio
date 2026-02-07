@@ -1,4 +1,3 @@
-
 "use client";
 
 import { TaskProvider, useTasks } from '@/app/context/TaskContext';
@@ -7,7 +6,7 @@ import { TaskForm } from '@/components/tasks/TaskForm';
 import { TaskCard } from '@/components/tasks/TaskCard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { format, isToday, addDays } from 'date-fns';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, ShieldCheck, User, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/app/context/AuthContext';
@@ -19,6 +18,11 @@ function TasksContent() {
   const { tasks, getOverdueTasks } = useTasks();
   const { user } = useAuth();
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const dayTasks = tasks.filter(t => {
     const d = new Date(t.dueDate);
@@ -59,6 +63,10 @@ function TasksContent() {
       </div>
     </div>
   );
+
+  if (!mounted) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen pb-24 md:pt-20">
