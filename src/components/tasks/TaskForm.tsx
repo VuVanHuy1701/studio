@@ -138,42 +138,43 @@ export function TaskForm({ taskToEdit, open: externalOpen, onOpenChange: setExte
           </Button>
         </DialogTrigger>
       )}
-      <DialogContent className="sm:max-w-[450px]">
+      <DialogContent className="sm:max-w-[450px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {taskToEdit ? `Edit Task` : (user?.role === 'admin' ? 'Assign New Task' : t('newTask'))}
           </DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4 pt-2">
-          <div className="space-y-2">
-            <Label htmlFor="title">{t('taskTitle')}</Label>
+        <form onSubmit={handleSubmit} className="space-y-3 pt-2">
+          <div className="space-y-1.5">
+            <Label htmlFor="title" className="text-xs font-bold uppercase text-muted-foreground">{t('taskTitle')}</Label>
             <Input 
               id="title" 
               placeholder={t('titlePlaceholder')} 
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               required
+              className="h-9"
             />
           </div>
 
           {user?.role === 'admin' && (
-            <div className="space-y-3 bg-muted/30 p-3 rounded-lg border border-dashed">
-              <Label className="flex items-center gap-2 mb-1">
-                <UserPlus className="w-4 h-4 text-primary" />
-                Assign Users (In order of rank)
+            <div className="space-y-2 bg-muted/30 p-2.5 rounded-lg border border-dashed">
+              <Label className="flex items-center gap-2 mb-0.5 text-xs font-bold uppercase text-muted-foreground">
+                <UserPlus className="w-3.5 h-3.5 text-primary" />
+                Assign Users
               </Label>
               
               {assignedUsers.length > 0 && (
-                <div className="flex flex-wrap gap-2 p-2 bg-background rounded-md border mb-2">
+                <div className="flex flex-wrap gap-1.5 p-1.5 bg-background rounded-md border mb-1.5 max-h-20 overflow-y-auto">
                   {assignedUsers.map((u, idx) => (
                     <Badge key={u} variant="secondary" className={cn(
-                      "flex items-center gap-1 py-1 px-2",
+                      "flex items-center gap-1 py-0.5 px-1.5 text-[10px]",
                       idx === 0 && "bg-primary text-primary-foreground"
                     )}>
-                      {idx === 0 && <Check className="w-3 h-3" />}
+                      {idx === 0 && <Check className="w-2.5 h-2.5" />}
                       {u}
-                      <button type="button" onClick={() => removeUser(u)} className="ml-1 hover:text-destructive">
-                        <X className="w-3 h-3" />
+                      <button type="button" onClick={() => removeUser(u)} className="ml-0.5 hover:text-destructive">
+                        <X className="w-2.5 h-2.5" />
                       </button>
                     </Badge>
                   ))}
@@ -181,30 +182,30 @@ export function TaskForm({ taskToEdit, open: externalOpen, onOpenChange: setExte
               )}
 
               <div className="relative">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute left-2.5 top-2 h-3.5 w-3.5 text-muted-foreground" />
                 <Input
                   placeholder="Search and select users..."
-                  className="pl-9 bg-background"
+                  className="pl-8 h-8 text-xs bg-background"
                   value={userSearch}
                   onChange={(e) => setUserSearch(e.target.value)}
                 />
               </div>
               
-              <ScrollArea className="h-32 rounded-md border bg-background">
-                <div className="p-1 space-y-1">
+              <ScrollArea className="h-24 rounded-md border bg-background">
+                <div className="p-0.5 space-y-0.5">
                   <button
                     type="button"
                     onClick={() => toggleUserSelection('Me')}
                     className={cn(
-                      "w-full flex items-center justify-between px-3 py-2 text-sm rounded-md transition-colors",
+                      "w-full flex items-center justify-between px-2 py-1.5 text-xs rounded-md transition-colors",
                       assignedUsers.includes('Me') ? "bg-primary/10 text-primary font-bold" : "hover:bg-muted"
                     )}
                   >
-                    <div className="flex items-center gap-2">
-                      <User className="w-3.5 h-3.5" />
+                    <div className="flex items-center gap-1.5">
+                      <User className="w-3 h-3" />
                       Me (Admin)
                     </div>
-                    {assignedUsers.includes('Me') && <Check className="w-4 h-4" />}
+                    {assignedUsers.includes('Me') && <Check className="w-3 h-3" />}
                   </button>
                   {filteredUsers.map(u => (
                     <button
@@ -212,45 +213,45 @@ export function TaskForm({ taskToEdit, open: externalOpen, onOpenChange: setExte
                       type="button"
                       onClick={() => toggleUserSelection(u.name)}
                       className={cn(
-                        "w-full flex items-center justify-between px-3 py-2 text-sm rounded-md transition-colors",
+                        "w-full flex items-center justify-between px-2 py-1.5 text-xs rounded-md transition-colors",
                         assignedUsers.includes(u.name) ? "bg-primary/10 text-primary font-bold" : "hover:bg-muted"
                       )}
                     >
-                      <div className="flex items-center gap-2">
-                        <User className="w-3.5 h-3.5" />
+                      <div className="flex items-center gap-1.5">
+                        <User className="w-3 h-3" />
                         {u.name}
                       </div>
-                      {assignedUsers.includes(u.name) && <Check className="w-4 h-4" />}
+                      {assignedUsers.includes(u.name) && <Check className="w-3 h-3" />}
                     </button>
                   ))}
                 </div>
               </ScrollArea>
               {assignedUsers.length > 0 && (
-                <p className="text-[10px] text-muted-foreground italic">
-                  * First user in the list is the Primary Responsible Party.
+                <p className="text-[9px] text-muted-foreground italic leading-none mt-1">
+                  * First user is the Lead Assignee.
                 </p>
               )}
             </div>
           )}
           
-          <div className="space-y-2">
-            <Label htmlFor="description">{t('description')}</Label>
+          <div className="space-y-1.5">
+            <Label htmlFor="description" className="text-xs font-bold uppercase text-muted-foreground">{t('description')}</Label>
             <Textarea 
               id="description" 
               placeholder={t('descPlaceholder')}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="h-20"
+              className="h-16 text-sm"
             />
           </div>
 
-          <div className="space-y-4 py-2 px-1">
+          <div className="space-y-2 py-1 px-1">
             <div className="flex items-center justify-between">
-              <Label className="flex items-center gap-2">
-                <Percent className="w-4 h-4 text-primary" />
-                Task Progress
+              <Label className="flex items-center gap-2 text-xs font-bold uppercase text-muted-foreground">
+                <Percent className="w-3.5 h-3.5 text-primary" />
+                Progress
               </Label>
-              <span className="text-sm font-bold text-primary">{progress}%</span>
+              <span className="text-xs font-bold text-primary">{progress}%</span>
             </div>
             <Slider 
               value={[progress]} 
@@ -261,66 +262,65 @@ export function TaskForm({ taskToEdit, open: externalOpen, onOpenChange: setExte
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>{t('category')}</Label>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold uppercase text-muted-foreground">{t('category')}</Label>
               <Select value={category} onValueChange={(v: Category) => setCategory(v)}>
-                <SelectTrigger>
+                <SelectTrigger className="h-9 text-xs">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   {categories.map(cat => (
-                    <SelectItem key={cat} value={cat}>{t(cat.toLowerCase() as any)}</SelectItem>
+                    <SelectItem key={cat} value={cat} className="text-xs">{t(cat.toLowerCase() as any)}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             
-            <div className="space-y-2">
-              <Label>{t('priority')}</Label>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold uppercase text-muted-foreground">{t('priority')}</Label>
               <Select value={priority} onValueChange={(v: Task['priority']) => setPriority(v)}>
-                <SelectTrigger>
+                <SelectTrigger className="h-9 text-xs">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   {priorities.map(p => (
-                    <SelectItem key={p} value={p}>{t(p.toLowerCase() as any)}</SelectItem>
+                    <SelectItem key={p} value={p} className="text-xs">{t(p.toLowerCase() as any)}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="due-date">{t('date')} & Deadline</Label>
-              <div className="relative">
-                <Input 
-                  id="due-date" 
-                  type="date" 
-                  value={dateString} 
-                  onChange={(e) => setDateString(e.target.value)} 
-                  className="w-full"
-                />
-              </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="due-date" className="text-xs font-bold uppercase text-muted-foreground">{t('date')}</Label>
+              <Input 
+                id="due-date" 
+                type="date" 
+                value={dateString} 
+                onChange={(e) => setDateString(e.target.value)} 
+                className="h-9 text-xs w-full"
+              />
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="due-time">{t('time')}</Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="due-time" className="text-xs font-bold uppercase text-muted-foreground">{t('time')}</Label>
               <Input 
                 id="due-time"
                 type="time" 
                 value={time} 
                 onChange={(e) => setTime(e.target.value)} 
+                className="h-9 text-xs w-full"
               />
             </div>
           </div>
 
           {user?.role === 'admin' && (
-            <div className="flex items-center justify-between p-3 bg-accent/5 rounded-lg border border-accent/20">
+            <div className="flex items-center justify-between p-2 bg-accent/5 rounded-lg border border-accent/20">
               <div className="flex items-center gap-2">
-                <Clock className="w-4 h-4 text-accent" />
-                <Label htmlFor="extended-time" className="text-sm font-bold text-accent">
+                <Clock className="w-3.5 h-3.5 text-accent" />
+                <Label htmlFor="extended-time" className="text-[10px] font-bold uppercase text-accent tracking-tighter">
                   {t('additionalTimeLabel')}
                 </Label>
               </div>
@@ -328,11 +328,12 @@ export function TaskForm({ taskToEdit, open: externalOpen, onOpenChange: setExte
                 id="extended-time"
                 checked={additionalTimeAllocated}
                 onCheckedChange={setAdditionalTimeAllocated}
+                className="scale-75"
               />
             </div>
           )}
 
-          <Button type="submit" className="w-full bg-accent text-accent-foreground hover:bg-accent/90 mt-2">
+          <Button type="submit" className="w-full bg-accent text-accent-foreground hover:bg-accent/90 h-10 text-sm font-bold uppercase">
             {taskToEdit ? (
               <span className="flex items-center gap-2"><Save className="w-4 h-4" /> Save Changes</span>
             ) : (
