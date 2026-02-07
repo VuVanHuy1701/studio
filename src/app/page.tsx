@@ -5,7 +5,7 @@ import { TaskProvider, useTasks } from '@/app/context/TaskContext';
 import { Navbar } from '@/components/layout/Navbar';
 import { TaskCard } from '@/components/tasks/TaskCard';
 import { TaskForm } from '@/components/tasks/TaskForm';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { 
@@ -87,38 +87,32 @@ function DashboardContent() {
           )}
         </header>
 
-        <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <section className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <Card className="border-none shadow-sm bg-primary text-primary-foreground overflow-hidden relative">
-            <div className="absolute top-0 right-0 p-4 opacity-10">
-              <CheckCircle2 className="w-16 h-16" />
+            <div className="absolute top-0 right-0 p-3 opacity-10">
+              <CheckCircle2 className="w-12 h-12" />
             </div>
-            <CardHeader className="p-4">
-              <CardTitle className="text-xs font-bold uppercase opacity-80">{t('dailyFocus')}</CardTitle>
-            </CardHeader>
-            <CardContent className="p-4 pt-0">
-              <div className="text-3xl font-bold mb-2">{completedToday}/{totalToday}</div>
-              <Progress value={progress} className="h-1.5 bg-white/20" />
-              <p className="text-[10px] mt-2 opacity-80">{t('tasksCompleted')}</p>
+            <CardContent className="p-4">
+              <h3 className="text-[10px] font-bold uppercase opacity-80 mb-1">{t('dailyFocus')}</h3>
+              <div className="text-2xl font-bold mb-1">{completedToday}/{totalToday}</div>
+              <Progress value={progress} className="h-1 bg-white/20" />
+              <p className="text-[9px] mt-1.5 opacity-80">{t('tasksCompleted')}</p>
             </CardContent>
           </Card>
 
           <Card className="border-none shadow-sm">
-            <CardHeader className="p-4">
-              <CardTitle className="text-xs font-bold text-muted-foreground uppercase">{t('weeklySummary')}</CardTitle>
-            </CardHeader>
-            <CardContent className="p-4 pt-0">
-              <div className="text-3xl font-bold">12</div>
-              <p className="text-[10px] text-muted-foreground mt-1">{t('tasksFinishedWeek')}</p>
+            <CardContent className="p-4">
+              <h3 className="text-[10px] font-bold text-muted-foreground uppercase mb-1">{t('weeklySummary')}</h3>
+              <div className="text-2xl font-bold">12</div>
+              <p className="text-[9px] text-muted-foreground mt-0.5">{t('tasksFinishedWeek')}</p>
             </CardContent>
           </Card>
 
           <Card className="border-none shadow-sm border-l-4 border-l-destructive">
-            <CardHeader className="p-4">
-              <CardTitle className="text-xs font-bold text-destructive uppercase">{t('overdue')}</CardTitle>
-            </CardHeader>
-            <CardContent className="p-4 pt-0">
-              <div className="text-3xl font-bold">{overdue.length}</div>
-              <p className="text-[10px] text-muted-foreground mt-1">{t('needsAttention')}</p>
+            <CardContent className="p-4">
+              <h3 className="text-[10px] font-bold text-destructive uppercase mb-1">{t('overdue')}</h3>
+              <div className="text-2xl font-bold">{overdue.length}</div>
+              <p className="text-[9px] text-muted-foreground mt-0.5">{t('needsAttention')}</p>
             </CardContent>
           </Card>
         </section>
@@ -204,16 +198,16 @@ function DashboardContent() {
 
         <section className="pt-8">
           <Card className="border-none shadow-sm bg-muted/30">
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Database className="w-5 h-5 text-primary" />
-                {t('dataManagement')}
-              </CardTitle>
-              <CardDescription>
-                Backup your tasks or sync with your personal Google Drive storage
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="p-6 space-y-4">
+              <div className="space-y-1">
+                <h3 className="text-lg font-bold flex items-center gap-2">
+                  <Database className="w-5 h-5 text-primary" />
+                  {t('dataManagement')}
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Backup your tasks or sync with your personal Google Drive storage
+                </p>
+              </div>
               <div className="flex flex-wrap gap-3">
                 <Button onClick={exportTasks} variant="outline" className="flex-1 min-w-[150px]">
                   <Download className="mr-2 w-4 h-4" />
