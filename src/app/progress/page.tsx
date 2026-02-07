@@ -68,113 +68,123 @@ function ProgressContent() {
   }
 
   return (
-    <div className="min-h-screen pb-24 md:pt-20">
+    <div className="min-h-screen pb-24 md:pb-10 md:pt-10">
       <Navbar />
       
-      <main className="max-w-screen-md mx-auto px-4 py-8 space-y-8">
+      <main className="max-w-5xl mx-auto px-4 py-8 space-y-8">
         <header>
-          <h1 className="text-3xl font-bold text-primary">{t('progressReview')}</h1>
-          <p className="text-muted-foreground">{t('analyzeTrends')}</p>
+          <h1 className="text-3xl font-bold text-primary tracking-tight">{t('progressReview')}</h1>
+          <p className="text-muted-foreground font-medium">{t('analyzeTrends')}</p>
         </header>
 
-        <Tabs defaultValue="weekly" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="weekly">{t('weeklyView')}</TabsTrigger>
-            <TabsTrigger value="monthly">{t('monthlyView')}</TabsTrigger>
+        <Tabs defaultValue="weekly" className="space-y-8">
+          <TabsList className="grid w-full grid-cols-2 bg-muted/30 p-1 rounded-2xl h-12 max-w-md">
+            <TabsTrigger value="weekly" className="rounded-xl font-bold">{t('weeklyView')}</TabsTrigger>
+            <TabsTrigger value="monthly" className="rounded-xl font-bold">{t('monthlyView')}</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="weekly" className="space-y-6">
-            <Card className="border-none shadow-sm">
-              <CardHeader>
-                <CardTitle>{t('dailyCompletion')}</CardTitle>
-                <CardDescription>Number of tasks completed over the last 7 days</CardDescription>
-              </CardHeader>
-              <CardContent className="h-[300px]">
-                <ChartContainer config={chartConfig}>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={dailyStats}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                      <XAxis dataKey="date" />
-                      <YAxis />
-                      <Tooltip content={<ChartTooltipContent />} />
-                      <Bar dataKey="completed" fill="var(--color-completed)" radius={[4, 4, 0, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </ChartContainer>
-              </CardContent>
-            </Card>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <Card className="border-none shadow-sm">
-                <CardHeader className="p-4">
-                  <CardTitle className="text-xs font-bold text-muted-foreground uppercase">{t('avgCompletionRate')}</CardTitle>
+          <TabsContent value="weekly" className="space-y-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <Card className="border-none shadow-sm lg:col-span-2 rounded-3xl overflow-hidden">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-xl font-bold">{t('dailyCompletion')}</CardTitle>
+                  <CardDescription>Number of tasks completed over the last 7 days</CardDescription>
                 </CardHeader>
-                <CardContent className="p-4 pt-0">
-                  <div className="text-3xl font-bold">
-                    {dailyStats.length > 0 ? Math.round(dailyStats.reduce((acc, curr) => acc + curr.rate, 0) / 7) : 0}%
-                  </div>
+                <CardContent className="h-[350px] p-6">
+                  <ChartContainer config={chartConfig}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={dailyStats}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--muted))" opacity={0.4} />
+                        <XAxis dataKey="date" tick={{ fontWeight: 600 }} axisLine={false} tickLine={false} />
+                        <YAxis axisLine={false} tickLine={false} tick={{ fontWeight: 600 }} />
+                        <Tooltip content={<ChartTooltipContent />} />
+                        <Bar dataKey="completed" fill="var(--color-completed)" radius={[6, 6, 0, 0]} barSize={40} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </ChartContainer>
                 </CardContent>
               </Card>
-              <Card className="border-none shadow-sm">
-                <CardHeader className="p-4">
-                  <CardTitle className="text-xs font-bold text-muted-foreground uppercase">{t('bestPerformance')}</CardTitle>
-                </CardHeader>
-                <CardContent className="p-4 pt-0">
-                  <div className="text-3xl font-bold text-accent">
-                    {dailyStats.length > 0 ? Math.max(...dailyStats.map(s => s.completed)) : 0}
-                  </div>
-                  <p className="text-[10px] text-muted-foreground">Tasks in a day</p>
-                </CardContent>
-              </Card>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4">
+                <Card className="border-none shadow-sm rounded-3xl bg-primary/5">
+                  <CardHeader className="p-6 pb-2">
+                    <CardTitle className="text-xs font-black text-primary uppercase tracking-widest">{t('avgCompletionRate')}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-6 pt-0">
+                    <div className="text-5xl font-black text-primary">
+                      {dailyStats.length > 0 ? Math.round(dailyStats.reduce((acc, curr) => acc + curr.rate, 0) / 7) : 0}%
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card className="border-none shadow-sm rounded-3xl bg-accent/5">
+                  <CardHeader className="p-6 pb-2">
+                    <CardTitle className="text-xs font-black text-accent uppercase tracking-widest">{t('bestPerformance')}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-6 pt-0">
+                    <div className="text-5xl font-black text-accent">
+                      {dailyStats.length > 0 ? Math.max(...dailyStats.map(s => s.completed)) : 0}
+                    </div>
+                    <p className="text-xs font-bold text-muted-foreground uppercase mt-1 tracking-tighter">Tasks in a single day</p>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
           </TabsContent>
 
-          <TabsContent value="monthly" className="space-y-6">
-            <Card className="border-none shadow-sm">
-              <CardHeader>
-                <CardTitle>{t('completionTrend')}</CardTitle>
-                <CardDescription>Visualizing your productivity over the last 30 days</CardDescription>
-              </CardHeader>
-              <CardContent className="h-[300px]">
-                <ChartContainer config={chartConfig}>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={monthlyStats}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                      <XAxis dataKey="date" hide />
-                      <YAxis />
-                      <Tooltip content={<ChartTooltipContent />} />
-                      <Line 
-                        type="monotone" 
-                        dataKey="completed" 
-                        stroke="var(--color-trend)" 
-                        strokeWidth={3}
-                        dot={false}
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </ChartContainer>
-              </CardContent>
-            </Card>
+          <TabsContent value="monthly" className="space-y-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <Card className="border-none shadow-sm lg:col-span-2 rounded-3xl overflow-hidden">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-xl font-bold">{t('completionTrend')}</CardTitle>
+                  <CardDescription>Visualizing your productivity over the last 30 days</CardDescription>
+                </CardHeader>
+                <CardContent className="h-[350px] p-6">
+                  <ChartContainer config={chartConfig}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={monthlyStats}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--muted))" opacity={0.4} />
+                        <XAxis dataKey="date" hide />
+                        <YAxis axisLine={false} tickLine={false} tick={{ fontWeight: 600 }} />
+                        <Tooltip content={<ChartTooltipContent />} />
+                        <Line 
+                          type="monotone" 
+                          dataKey="completed" 
+                          stroke="var(--color-trend)" 
+                          strokeWidth={4}
+                          dot={{ r: 4, strokeWidth: 2, fill: "white" }}
+                          activeDot={{ r: 6, strokeWidth: 0 }}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </ChartContainer>
+                </CardContent>
+              </Card>
 
-            <Card className="border-none shadow-sm bg-primary/5">
-              <CardContent className="p-6">
-                <h3 className="font-bold mb-4">{t('monthlyInsights')}</h3>
-                <ul className="space-y-3 text-sm">
-                  <li className="flex items-start gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5" />
-                    <span>Total tasks handled: <strong>{monthlyStats.reduce((acc, curr) => acc + curr.total, 0)}</strong></span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5" />
-                    <span>Consistently active days: <strong>{monthlyStats.filter(s => s.total > 0).length}</strong></span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5" />
-                    <span>Your peak performance was around <strong>{monthlyStats.sort((a,b) => b.completed - a.completed)[0]?.date || '...'}</strong></span>
-                  </li>
-                </ul>
-              </CardContent>
-            </Card>
+              <Card className="border-none shadow-sm bg-primary/[0.03] rounded-3xl border border-primary/10">
+                <CardContent className="p-8">
+                  <h3 className="text-lg font-bold mb-6 flex items-center gap-2">
+                    <div className="bg-primary/10 p-2 rounded-lg">
+                      <BarChart data={[]} className="w-4 h-4 text-primary" />
+                    </div>
+                    {t('monthlyInsights')}
+                  </h3>
+                  <ul className="space-y-6">
+                    <li className="space-y-1">
+                      <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Total tasks handled</p>
+                      <p className="text-2xl font-bold text-primary">{monthlyStats.reduce((acc, curr) => acc + curr.total, 0)}</p>
+                    </li>
+                    <li className="space-y-1">
+                      <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Consistently active days</p>
+                      <p className="text-2xl font-bold text-primary">{monthlyStats.filter(s => s.total > 0).length}</p>
+                    </li>
+                    <li className="space-y-1">
+                      <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Peak performance date</p>
+                      <p className="text-2xl font-bold text-accent">{monthlyStats.sort((a,b) => b.completed - a.completed)[0]?.date || '...'}</p>
+                    </li>
+                  </ul>
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
         </Tabs>
       </main>

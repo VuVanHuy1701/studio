@@ -50,13 +50,13 @@ function TasksContent() {
   const hours = Array.from({ length: 24 }, (_, i) => i);
 
   const TaskList = ({ items, title, icon: Icon, colorClass }: { items: Task[], title: string, icon: any, colorClass: string }) => (
-    <div className="space-y-3">
+    <div className="space-y-4">
       <div className="flex items-center gap-2 px-1">
         <Icon className={cn("w-4 h-4", colorClass)} />
-        <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{title}</h2>
-        <Badge variant="outline" className="ml-auto text-[10px] h-4">{items.length}</Badge>
+        <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{title}</h2>
+        <Badge variant="secondary" className="ml-auto text-[10px] h-5 px-2 bg-primary/5 text-primary border-primary/10">{items.length}</Badge>
       </div>
-      <div className="grid gap-3">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {items.map(task => (
           <TaskCard key={task.id} task={task} />
         ))}
@@ -69,35 +69,35 @@ function TasksContent() {
   }
 
   return (
-    <div className="min-h-screen pb-24 md:pt-20">
+    <div className="min-h-screen pb-24 md:pb-10 md:pt-10">
       <Navbar />
       
-      <main className="max-w-screen-md mx-auto px-4 py-8 space-y-6">
-        <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <h1 className="text-3xl font-bold text-primary">Schedule</h1>
+      <main className="max-w-5xl mx-auto px-4 py-8 space-y-8">
+        <header className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <h1 className="text-3xl font-bold text-primary tracking-tight">Schedule</h1>
           
-          <div className="flex items-center gap-2 bg-white rounded-lg p-1 border shadow-sm">
-            <Button variant="ghost" size="icon" onClick={() => setSelectedDate(addDays(selectedDate, -1))}>
-              <ChevronLeft className="w-4 h-4" />
+          <div className="flex items-center gap-2 bg-white/80 backdrop-blur-sm rounded-2xl p-1.5 border shadow-sm self-start md:self-auto">
+            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl hover:bg-primary/5" onClick={() => setSelectedDate(addDays(selectedDate, -1))}>
+              <ChevronLeft className="w-5 h-5" />
             </Button>
-            <div className="flex items-center gap-2 px-4 font-medium text-sm min-w-[150px] justify-center">
-              <CalendarIcon className="w-4 h-4 text-primary" />
+            <div className="flex items-center gap-2 px-6 font-bold text-sm min-w-[180px] justify-center text-primary">
+              <CalendarIcon className="w-4 h-4" />
               {isToday(selectedDate) ? 'Today' : format(selectedDate, 'MMM do, yyyy')}
             </div>
-            <Button variant="ghost" size="icon" onClick={() => setSelectedDate(addDays(selectedDate, 1))}>
-              <ChevronRight className="w-4 h-4" />
+            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl hover:bg-primary/5" onClick={() => setSelectedDate(addDays(selectedDate, 1))}>
+              <ChevronRight className="w-5 h-5" />
             </Button>
           </div>
         </header>
 
         {overdue.length > 0 && (
-          <div className="space-y-4 bg-destructive/5 p-4 rounded-xl border border-destructive/20">
+          <div className="space-y-4 bg-destructive/[0.03] p-6 rounded-3xl border border-destructive/10">
             <div className="flex items-center gap-2 text-destructive">
-              <AlertCircle className="w-4 h-4" />
-              <h2 className="text-sm font-bold uppercase tracking-wider">Overdue Tasks</h2>
-              <Badge variant="destructive" className="ml-auto">{overdue.length}</Badge>
+              <AlertCircle className="w-5 h-5" />
+              <h2 className="text-sm font-bold uppercase tracking-widest">Overdue Tasks</h2>
+              <Badge variant="destructive" className="ml-auto font-black">{overdue.length}</Badge>
             </div>
-            <div className="grid gap-3">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {overdue.map(task => (
                 <TaskCard key={task.id} task={task} />
               ))}
@@ -106,12 +106,12 @@ function TasksContent() {
         )}
 
         <Tabs defaultValue="list" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-8">
-            <TabsTrigger value="list">Daily View</TabsTrigger>
-            <TabsTrigger value="hourly">Hourly View</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2 mb-8 bg-muted/30 p-1 rounded-2xl h-12">
+            <TabsTrigger value="list" className="rounded-xl font-bold data-[state=active]:shadow-sm">Daily View</TabsTrigger>
+            <TabsTrigger value="hourly" className="rounded-xl font-bold data-[state=active]:shadow-sm">Hourly View</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="list" className="space-y-8">
+          <TabsContent value="list" className="space-y-12">
             {dayTasks.length > 0 ? (
               <>
                 {adminTasks.length > 0 && (
@@ -133,36 +133,38 @@ function TasksContent() {
                 )}
 
                 {isAdmin && adminTasks.length === 0 && (
-                   <div className="text-center py-20 bg-white rounded-xl border border-dashed text-muted-foreground">
-                    You haven't assigned any tasks for this day.
+                   <div className="text-center py-24 bg-white/50 rounded-3xl border border-dashed border-primary/10 text-muted-foreground shadow-sm">
+                    <p className="font-medium">You haven't assigned any tasks for this day.</p>
                   </div>
                 )}
               </>
             ) : (
-              <div className="text-center py-20 bg-white rounded-xl border border-dashed text-muted-foreground">
-                No tasks for this day.
+              <div className="text-center py-24 bg-white/50 rounded-3xl border border-dashed border-primary/10 text-muted-foreground shadow-sm">
+                <p className="font-medium">No tasks for this day.</p>
               </div>
             )}
           </TabsContent>
           
-          <TabsContent value="hourly" className="relative space-y-0 bg-white rounded-xl border shadow-sm p-4">
+          <TabsContent value="hourly" className="relative space-y-0 bg-white/80 backdrop-blur-sm rounded-3xl border shadow-sm p-6">
             {hours.map((hour) => {
               const hourlyTasks = sortTasks(dayTasks.filter(t => new Date(t.dueDate).getHours() === hour));
               return (
-                <div key={hour} className="group flex gap-4 border-b last:border-0 py-4 min-h-[80px]">
-                  <div className="w-16 text-xs font-bold text-muted-foreground pt-1 sticky left-0 bg-white">
+                <div key={hour} className="group flex gap-6 border-b border-primary/5 last:border-0 py-5 min-h-[90px]">
+                  <div className="w-16 text-xs font-black text-primary/60 pt-1 sticky left-0 uppercase tracking-tighter">
                     {format(new Date().setHours(hour, 0), 'HH:mm')}
                   </div>
-                  <div className="flex-1 space-y-2">
+                  <div className="flex-1">
                     {hourlyTasks.length > 0 ? (
-                      hourlyTasks.map(task => (
-                        <div key={task.id} className="scale-95 origin-left">
-                          <TaskCard task={task} />
-                        </div>
-                      ))
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        {hourlyTasks.map(task => (
+                          <div key={task.id} className="scale-[0.98] origin-left hover:scale-100 transition-transform">
+                            <TaskCard task={task} />
+                          </div>
+                        ))}
+                      </div>
                     ) : (
                       <div className="h-full flex items-center">
-                        <div className="w-full h-[1px] bg-muted/30 group-hover:bg-primary/20 transition-colors" />
+                        <div className="w-full h-[1px] bg-muted/20 group-hover:bg-primary/10 transition-colors" />
                       </div>
                     )}
                   </div>
