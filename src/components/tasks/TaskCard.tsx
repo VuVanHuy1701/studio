@@ -64,6 +64,7 @@ export function TaskCard({ task }: TaskCardProps) {
   const [isUrgentDeadline, setIsUrgentDeadline] = useState(false);
 
   const isOverdue = !task.completed && isPast(new Date(task.dueDate));
+  const hasNotesAndInProgress = !!task.notes && !task.completed;
 
   useEffect(() => {
     const checkUrgency = () => {
@@ -152,7 +153,8 @@ export function TaskCard({ task }: TaskCardProps) {
       <Card className={cn(
         "group relative overflow-hidden transition-all hover:shadow-md border-l-4",
         task.completed ? "opacity-60 grayscale-[0.5] border-l-muted" : "border-l-primary",
-        isAdminCreated && !isAdmin && "bg-accent/[0.04] border-l-accent ring-1 ring-accent/10",
+        isAdminCreated && !isAdmin && !hasNotesAndInProgress && "bg-accent/[0.04] border-l-accent ring-1 ring-accent/10",
+        hasNotesAndInProgress && "bg-green-50/80 dark:bg-green-950/20 border-l-green-500 ring-1 ring-green-500/20 shadow-sm",
         isUrgentDeadline && !isOverdue && "border-l-destructive bg-destructive/[0.03] ring-1 ring-destructive/20 animate-pulse-slow",
         isOverdue && "border-l-destructive bg-destructive/[0.05] ring-1 ring-destructive/30"
       )}>
@@ -210,6 +212,12 @@ export function TaskCard({ task }: TaskCardProps) {
                     Due Soon
                   </Badge>
                 )}
+                {hasNotesAndInProgress && (
+                  <Badge variant="secondary" className="text-[8px] md:text-[10px] h-3.5 md:h-4 px-1.5 flex gap-1 items-center bg-green-200 text-green-800 border-green-300 font-bold uppercase tracking-tighter">
+                    <Activity className="w-2.5 h-2.5 md:w-3 md:h-3" />
+                    Reported
+                  </Badge>
+                )}
               </div>
               <div className="hidden md:flex gap-2">
                 <Badge variant="outline" className={cn("text-[9px] px-1.5 py-0", getPriorityColor(task.priority))}>
@@ -233,7 +241,7 @@ export function TaskCard({ task }: TaskCardProps) {
                   </span>
                   <span>{task.progress}%</span>
                 </div>
-                <Progress value={task.progress} className="h-0.5 md:h-1" />
+                <Progress value={task.progress} className={cn("h-0.5 md:h-1", hasNotesAndInProgress && "[&>div]:bg-green-500")} />
               </div>
             )}
 
@@ -245,7 +253,10 @@ export function TaskCard({ task }: TaskCardProps) {
             )}
 
             {task.notes && (
-              <div className="mt-1 p-1.5 rounded bg-muted/50 border border-dashed text-[10px] md:text-xs text-muted-foreground">
+              <div className={cn(
+                "mt-1 p-1.5 rounded border border-dashed text-[10px] md:text-xs text-muted-foreground",
+                hasNotesAndInProgress ? "bg-green-100/50 border-green-300 text-green-900" : "bg-muted/50 border-muted-foreground/30"
+              )}>
                 <p className="font-bold flex items-center gap-1 mb-0.5">
                   <MessageSquare className="w-2.5 h-2.5 md:w-3 md:h-3" /> User Notes:
                 </p>
