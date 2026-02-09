@@ -22,7 +22,8 @@ import {
   AlertCircle,
   CalendarClock,
   Activity,
-  Percent
+  Percent,
+  BarChart
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTasks } from '@/app/context/TaskContext';
@@ -219,8 +220,8 @@ export function TaskCard({ task }: TaskCardProps) {
                   </Badge>
                 )}
               </div>
-              <div className="hidden md:flex gap-2">
-                <Badge variant="outline" className={cn("text-[9px] px-1.5 py-0", getPriorityColor(task.priority))}>
+              <div className="flex gap-2">
+                <Badge variant="outline" className={cn("text-[9px] px-1.5 py-0 font-bold uppercase tracking-tighter", getPriorityColor(task.priority))}>
                   {t(task.priority.toLowerCase() as any)}
                 </Badge>
               </div>
@@ -280,6 +281,10 @@ export function TaskCard({ task }: TaskCardProps) {
               <span className="flex items-center gap-1">
                 <Tag className="w-2.5 h-2.5 md:w-3 md:h-3" />
                 {t(task.category.toLowerCase() as any)}
+              </span>
+              <span className="flex items-center gap-1">
+                <BarChart className="w-2.5 h-2.5 md:w-3 md:h-3" />
+                {t(task.priority.toLowerCase() as any)}
               </span>
               {task.assignedTo && task.assignedTo.length > 0 && (
                 <div className="flex items-center gap-1.5">
