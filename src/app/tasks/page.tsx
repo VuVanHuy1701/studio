@@ -32,17 +32,26 @@ function TasksContent() {
            d.getFullYear() === s.getFullYear();
   });
 
-  const overdue = getOverdueTasks();
-  const isAdmin = user?.role === 'admin';
-
   const sortTasks = (taskList: Task[]) => {
+    const priorityWeight = { High: 3, Medium: 2, Low: 1 };
     return [...taskList].sort((a, b) => {
+      // 1. Completion status (incomplete first)
       if (a.completed !== b.completed) {
         return a.completed ? 1 : -1;
       }
+      // 2. Priority (High > Medium > Low)
+      const weightA = priorityWeight[a.priority] || 0;
+      const weightB = priorityWeight[b.priority] || 0;
+      if (weightA !== weightB) {
+        return weightB - weightA;
+      }
+      // 3. Due Date
       return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
     });
   };
+
+  const overdue = sortTasks(getOverdueTasks());
+  const isAdmin = user?.role === 'admin';
 
   const adminTasks = sortTasks(dayTasks.filter(t => t.createdBy === 'admin-id'));
   const personalTasks = sortTasks(dayTasks.filter(t => t.createdBy !== 'admin-id'));

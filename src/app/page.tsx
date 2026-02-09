@@ -42,10 +42,19 @@ function DashboardContent() {
   const todayTasks = tasks.filter(t => isToday(new Date(t.dueDate)));
   
   const sortTasks = (taskList: Task[]) => {
+    const priorityWeight = { High: 3, Medium: 2, Low: 1 };
     return [...taskList].sort((a, b) => {
+      // 1. Completion status (incomplete first)
       if (a.completed !== b.completed) {
         return a.completed ? 1 : -1;
       }
+      // 2. Priority (High > Medium > Low)
+      const weightA = priorityWeight[a.priority] || 0;
+      const weightB = priorityWeight[b.priority] || 0;
+      if (weightA !== weightB) {
+        return weightB - weightA;
+      }
+      // 3. Due Date
       return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
     });
   };
@@ -59,7 +68,6 @@ function DashboardContent() {
   
   const overdue = getOverdueTasks();
 
-  // Calculate tasks finished this week (starting Monday)
   const startOfThisWeek = startOfWeek(new Date(), { weekStartsOn: 1 });
   const completedThisWeek = tasks.filter(t => 
     t.completed && 
@@ -82,7 +90,7 @@ function DashboardContent() {
   const isAdmin = user?.role === 'admin';
 
   if (!mounted) {
-    return null; // Prevent hydration mismatch
+    return null;
   }
 
   return (
@@ -140,7 +148,7 @@ function DashboardContent() {
               <h2 className="text-sm md:text-lg font-bold">Overdue Tasks</h2>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
-              {overdue.map(task => (
+              {sortTasks(overdue).map(task => (
                 <TaskCard key={task.id} task={task} />
               ))}
             </div>
