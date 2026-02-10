@@ -1,0 +1,25 @@
+{
+  "name": "Task Compass",
+  "short_name": "Compass",
+  "description": "Navigate your productivity with precision",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F2F3F7",
+  "theme_color": "#79A8D3",
+  "orientation": "portrait",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "https://picsum.photos/seed/taskicon192/192/192",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://picsum.photos/seed/taskicon512/512/512",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
