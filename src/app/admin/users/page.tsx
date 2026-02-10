@@ -4,7 +4,7 @@
 import { Navbar } from '@/components/layout/Navbar';
 import { useAuth } from '@/app/context/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
@@ -117,27 +117,27 @@ export default function UserManagementPage() {
       <main className="max-w-5xl mx-auto px-4 py-8 space-y-8">
         <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="space-y-1">
-            <Link href="/" className="flex items-center gap-1 text-xs font-bold text-muted-foreground hover:text-primary transition-colors uppercase tracking-widest mb-2">
+            <Link href="/" className="flex items-center gap-1 text-[10px] font-black text-muted-foreground hover:text-primary transition-colors uppercase tracking-widest mb-2">
               <ChevronLeft className="w-3 h-3" /> Back to Dashboard
             </Link>
             <h1 className="text-3xl font-black text-primary tracking-tight flex items-center gap-3">
               <Users className="w-8 h-8" />
-              User Management
+              Manage Personnel
             </h1>
-            <p className="text-muted-foreground font-medium">Create and manage access for your team members</p>
+            <p className="text-muted-foreground font-medium text-sm">Control access and roles for the Compass system</p>
           </div>
 
           <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) resetForm(); }}>
             <DialogTrigger asChild>
               <Button className="h-12 rounded-2xl font-bold uppercase tracking-widest gap-2 bg-primary px-6 shadow-lg shadow-primary/20">
                 <UserPlus className="w-5 h-5" />
-                Add New Account
+                New Account
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[450px] rounded-3xl">
+            <DialogContent className="sm:max-w-[450px] rounded-[2rem]">
               <DialogHeader>
                 <DialogTitle className="text-2xl font-black tracking-tight">
-                  {editingUser ? 'Edit Account' : 'New User Account'}
+                  {editingUser ? 'Edit User' : 'Register New User'}
                 </DialogTitle>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-5 py-4">
@@ -147,7 +147,7 @@ export default function UserManagementPage() {
                     <Input 
                       value={username} 
                       onChange={(e) => setUsername(e.target.value)} 
-                      placeholder="jdoe" 
+                      placeholder="e.g. jsmith" 
                       required 
                       className="h-11 rounded-xl"
                     />
@@ -166,11 +166,11 @@ export default function UserManagementPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Full Name</Label>
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Full Display Name</Label>
                   <Input 
                     value={displayName} 
                     onChange={(e) => setDisplayName(e.target.value)} 
-                    placeholder="John Doe" 
+                    placeholder="John Smith" 
                     required 
                     className="h-11 rounded-xl"
                   />
@@ -182,14 +182,14 @@ export default function UserManagementPage() {
                     type="email" 
                     value={email} 
                     onChange={(e) => setEmail(e.target.value)} 
-                    placeholder="john@example.com" 
+                    placeholder="john@taskcompass.com" 
                     required 
                     className="h-11 rounded-xl"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">System Role</Label>
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">System Permission</Label>
                   <Select value={role} onValueChange={(v: UserRole) => setRole(v)}>
                     <SelectTrigger className="h-11 rounded-xl">
                       <SelectValue />
@@ -203,7 +203,7 @@ export default function UserManagementPage() {
 
                 <DialogFooter className="pt-4">
                   <Button type="submit" className="w-full h-12 rounded-xl font-black uppercase tracking-widest">
-                    {editingUser ? 'Save Changes' : 'Create Account'}
+                    {editingUser ? 'Apply Updates' : 'Create Account'}
                   </Button>
                 </DialogFooter>
               </form>
@@ -211,22 +211,37 @@ export default function UserManagementPage() {
           </Dialog>
         </header>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
           {managedUsers.map((u) => (
-            <Card key={u.uid} className="border-none shadow-sm hover:shadow-md transition-all rounded-3xl overflow-hidden group">
-              <CardHeader className="pb-3 bg-muted/30">
-                <div className="flex items-center justify-between">
-                  <div className="p-2 bg-primary/10 rounded-xl">
-                    {u.role === 'admin' ? <ShieldCheck className="w-5 h-5 text-primary" /> : <User className="w-5 h-5 text-primary" />}
+            <Card key={u.uid} className="border-none shadow-sm hover:shadow-md transition-all rounded-[2rem] overflow-hidden group bg-white/50 backdrop-blur-sm">
+              <CardHeader className="pb-3 border-b border-dashed border-primary/5">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-3 bg-primary/5 rounded-2xl border border-primary/10">
+                      {u.role === 'admin' ? <ShieldCheck className="w-6 h-6 text-primary" /> : <User className="w-6 h-6 text-primary" />}
+                    </div>
+                    <div>
+                      <CardTitle className="text-lg font-black tracking-tight leading-tight">{u.displayName}</CardTitle>
+                      <div className="flex gap-1.5 mt-1">
+                        <Badge variant="outline" className="text-[9px] h-4 px-1.5 font-black uppercase tracking-tighter border-primary/20 bg-primary/5 text-primary">
+                          @{u.username}
+                        </Badge>
+                        {u.role === 'admin' ? (
+                          <Badge className="bg-primary text-[8px] h-4 px-1.5 font-black uppercase tracking-widest border-none shadow-sm">Admin</Badge>
+                        ) : (
+                          <Badge variant="secondary" className="text-[8px] h-4 px-1.5 font-black uppercase tracking-widest">User</Badge>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg hover:bg-primary/10 text-primary" onClick={() => handleEdit(u)}>
-                      <Edit3 className="w-4 h-4" />
+                  <div className="flex gap-1">
+                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full hover:bg-primary/10 text-primary" onClick={() => handleEdit(u)}>
+                      <Edit3 className="w-3.5 h-3.5" />
                     </Button>
                     <Button 
                       variant="ghost" 
                       size="icon" 
-                      className="h-8 w-8 rounded-lg hover:bg-destructive/10 text-destructive" 
+                      className="h-8 w-8 rounded-full hover:bg-destructive/10 text-destructive" 
                       disabled={u.uid === 'admin-id'}
                       onClick={() => {
                         if (confirm(`Are you sure you want to delete ${u.displayName}?`)) {
@@ -235,34 +250,21 @@ export default function UserManagementPage() {
                         }
                       }}
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-3.5 h-3.5" />
                     </Button>
                   </div>
                 </div>
-                <div className="mt-3">
-                  <CardTitle className="text-lg font-bold truncate">{u.displayName}</CardTitle>
-                  <Badge variant="outline" className="mt-1 text-[9px] font-black uppercase tracking-tighter border-primary/20 text-primary">
-                    @{u.username}
-                  </Badge>
-                </div>
               </CardHeader>
-              <CardContent className="pt-5 space-y-4">
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground font-medium">
-                    <Mail className="w-3.5 h-3.5" />
-                    <span className="truncate">{u.email}</span>
+              <CardContent className="pt-4 space-y-3">
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center gap-2.5 p-2 bg-muted/30 rounded-xl border border-transparent hover:border-primary/10 transition-colors">
+                    <Mail className="w-3.5 h-3.5 text-muted-foreground" />
+                    <span className="text-[11px] font-bold text-muted-foreground truncate">{u.email}</span>
                   </div>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground font-medium">
-                    <Lock className="w-3.5 h-3.5" />
-                    <span>••••••••</span>
+                  <div className="flex items-center gap-2.5 p-2 bg-muted/30 rounded-xl border border-transparent hover:border-primary/10 transition-colors">
+                    <Lock className="w-3.5 h-3.5 text-muted-foreground" />
+                    <span className="text-[11px] font-bold text-muted-foreground tracking-widest">••••••••</span>
                   </div>
-                </div>
-                <div className="pt-2">
-                  {u.role === 'admin' ? (
-                    <Badge className="bg-primary text-[8px] h-4 px-2 font-black uppercase tracking-widest">Administrator</Badge>
-                  ) : (
-                    <Badge variant="secondary" className="text-[8px] h-4 px-2 font-black uppercase tracking-widest">Standard User</Badge>
-                  )}
                 </div>
               </CardContent>
             </Card>
