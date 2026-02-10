@@ -1,9 +1,9 @@
-
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { Task } from '@/app/lib/types';
 import { useAuth } from '@/app/context/AuthContext';
+import { getTasksFromFile, persistTasksToFile } from '@/app/actions/task-actions';
 
 interface TaskContextType {
   tasks: Task[];
@@ -14,47 +14,62 @@ interface TaskContextType {
   getOverdueTasks: () => Task[];
   exportTasks: () => void;
   importTasks: (file: File) => Promise<boolean>;
+  refreshTasks: () => Promise<void>;
 }
 
 const TaskContext = createContext<TaskContextType | undefined>(undefined);
 
 export function TaskProvider({ children }: { children: React.ReactNode }) {
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const [allTasks, setAllTasks] = useState<Task[]>([]);
   const [isHydrated, setIsHydrated] = useState(false);
   const { user } = useAuth();
 
-  useEffect(() => {
-    const savedTasks = localStorage.getItem('task_compass_tasks');
-    if (savedTasks) {
-      try {
-        const parsed = JSON.parse(savedTasks);
-        setTasks(parsed.map((t: any) => ({ 
-          ...t, 
+  // Load tasks from Server (and fallback to LocalStorage if offline)
+  const refreshTasks = useCallback(async () => {
+    try {
+      const serverTasks = await getTasksFromFile();
+      setAllTasks(serverTasks);
+      localStorage.setItem('task_compass_tasks', JSON.stringify(serverTasks));
+    } catch (e) {
+      console.warn("Failed to fetch tasks from server, falling back to local storage", e);
+      const savedTasks = localStorage.getItem('task_compass_tasks');
+      if (savedTasks) {
+        setAllTasks(JSON.parse(savedTasks).map((t: any) => ({
+          ...t,
           dueDate: new Date(t.dueDate),
-          completedAt: t.completedAt ? new Date(t.completedAt) : undefined,
-          assignedTo: Array.isArray(t.assignedTo) ? t.assignedTo : [t.assignedTo || 'Me'],
-          progress: t.progress ?? (t.completed ? 100 : 0)
+          completedAt: t.completedAt ? new Date(t.completedAt) : undefined
         })));
-      } catch (e) {
-        console.error("Failed to parse tasks", e);
       }
     }
     setIsHydrated(true);
   }, []);
 
   useEffect(() => {
+    refreshTasks();
+  }, [refreshTasks]);
+
+  // Sync changes to Server whenever tasks change
+  useEffect(() => {
     if (isHydrated) {
-      localStorage.setItem('task_compass_tasks', JSON.stringify(tasks));
+      localStorage.setItem('task_compass_tasks', JSON.stringify(allTasks));
+      persistTasksToFile(allTasks).catch(err => {
+        console.warn('System file sync skipped or failed:', err);
+      });
     }
-  }, [tasks, isHydrated]);
+  }, [allTasks, isHydrated]);
 
   const addTask = (task: Omit<Task, 'id'>) => {
-    const newTask = { ...task, id: uuidv4() };
-    setTasks(prev => [...prev, newTask]);
+    const newTask: Task = { 
+      ...task, 
+      id: Math.random().toString(36).substring(2, 9),
+      progress: task.progress ?? 0,
+      assignedTo: task.assignedTo || ['Me']
+    };
+    setAllTasks(prev => [...prev, newTask]);
   };
 
   const toggleTask = (id: string) => {
-    setTasks(prev => prev.map(task => {
+    setAllTasks(prev => prev.map(task => {
       if (task.id === id) {
         const isNowCompleted = !task.completed;
         return { 
@@ -69,13 +84,11 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateTask = (id: string, updates: Partial<Task>) => {
-    setTasks(prev => prev.map(task => {
+    setAllTasks(prev => prev.map(task => {
       if (task.id === id) {
-        const wasNotCompleted = !task.completed;
         const isNowCompleted = updates.completed !== undefined ? updates.completed : task.completed;
-        
         let completedAt = task.completedAt;
-        if (wasNotCompleted && isNowCompleted) {
+        if (!task.completed && isNowCompleted) {
           completedAt = new Date();
         } else if (isNowCompleted === false) {
           completedAt = undefined;
@@ -91,27 +104,13 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
   };
 
   const deleteTask = (id: string) => {
-    const task = tasks.find(t => t.id === id);
-    if (!task) return;
-
-    const isOwner = task.createdBy === user?.uid;
-    const isAdmin = user?.role === 'admin';
-    
-    if (isAdmin || isOwner) {
-      setTasks(prev => prev.filter(t => t.id !== id));
-    }
+    setAllTasks(prev => prev.filter(t => t.id !== id));
   };
 
   const getVisibleTasks = () => {
     if (!user) return [];
     
-    // Admins see tasks they created (which includes all tasks they assigned to others)
-    if (user.role === 'admin') {
-      return tasks.filter(t => t.createdBy === user.uid);
-    }
-    
-    // Regular users see tasks they created OR tasks where they are specifically listed in assignedTo
-    return tasks.filter(t => {
+    return allTasks.filter(t => {
       // 1. You created it
       if (t.createdBy === user.uid) return true;
 
@@ -134,7 +133,7 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
   };
 
   const exportTasks = () => {
-    const dataStr = JSON.stringify(tasks, null, 2);
+    const dataStr = JSON.stringify(allTasks, null, 2);
     const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
     const linkElement = document.createElement('a');
     linkElement.setAttribute('href', dataUri);
@@ -154,7 +153,7 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
           assignedTo: Array.isArray(t.assignedTo) ? t.assignedTo : [t.assignedTo || 'Me'],
           progress: t.progress ?? (t.completed ? 100 : 0)
         }));
-        setTasks(validatedTasks);
+        setAllTasks(validatedTasks);
         return true;
       }
       return false;
@@ -173,7 +172,8 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
       updateTask,
       getOverdueTasks,
       exportTasks,
-      importTasks
+      importTasks,
+      refreshTasks
     }}>
       {children}
     </TaskContext.Provider>
@@ -186,8 +186,4 @@ export function useTasks() {
     throw new Error('useTasks must be used within a TaskProvider');
   }
   return context;
-}
-
-function uuidv4() {
-  return Math.random().toString(36).substring(2, 9);
 }
