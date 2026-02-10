@@ -105,17 +105,27 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
   const getVisibleTasks = () => {
     if (!user) return [];
     
+    // Admins see tasks they created (which includes all tasks they assigned to others)
     if (user.role === 'admin') {
       return tasks.filter(t => t.createdBy === user.uid);
     }
     
-    return tasks.filter(t => 
-      t.createdBy === user.uid || 
-      t.assignedTo.includes(user.displayName || '') || 
-      t.assignedTo.includes(user.email || '') ||
-      t.assignedTo.includes(user.uid) ||
-      t.assignedTo.includes('Me')
-    );
+    // Regular users see tasks they created OR tasks where they are specifically listed in assignedTo
+    return tasks.filter(t => {
+      // 1. You created it
+      if (t.createdBy === user.uid) return true;
+
+      // 2. You are specifically assigned
+      const isAssignedToMe = t.assignedTo.some(assignee => 
+        assignee === user.displayName || 
+        assignee === user.email || 
+        assignee === user.uid ||
+        (user.username && assignee === user.username) ||
+        (assignee === 'Me' && t.createdBy === user.uid)
+      );
+
+      return isAssignedToMe;
+    });
   };
 
   const getOverdueTasks = () => {
