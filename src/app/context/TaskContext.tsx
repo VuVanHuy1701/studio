@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
@@ -24,7 +25,6 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
   const [isHydrated, setIsHydrated] = useState(false);
   const { user } = useAuth();
 
-  // Load tasks from Server (and fallback to LocalStorage if offline)
   const refreshTasks = useCallback(async () => {
     try {
       const serverTasks = await getTasksFromFile();
@@ -48,7 +48,6 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
     refreshTasks();
   }, [refreshTasks]);
 
-  // Sync changes to Server whenever tasks change
   useEffect(() => {
     if (isHydrated) {
       localStorage.setItem('task_compass_tasks', JSON.stringify(allTasks));
@@ -111,10 +110,8 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
     if (!user) return [];
     
     return allTasks.filter(t => {
-      // 1. You created it
       if (t.createdBy === user.uid) return true;
 
-      // 2. You are specifically assigned
       const isAssignedToMe = t.assignedTo.some(assignee => 
         assignee === user.displayName || 
         assignee === user.email || 
