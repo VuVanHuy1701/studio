@@ -6,7 +6,8 @@
       "password": "admin@123",
       "displayName": "System Administrator",
       "email": "admin@taskcompass.com",
-      "role": "admin"
+      "role": "admin",
+      "photoURL": null
     },
     {
       "uid": "user-alice",
@@ -14,7 +15,8 @@
       "password": "password123",
       "displayName": "Alice",
       "email": "alice@example.com",
-      "role": "user"
+      "role": "user",
+      "photoURL": null
     },
     {
       "uid": "user-bob",
@@ -22,7 +24,8 @@
       "password": "password123",
       "displayName": "Bob",
       "email": "bob@example.com",
-      "role": "user"
+      "role": "user",
+      "photoURL": null
     },
     {
       "username": "vanhuy",
