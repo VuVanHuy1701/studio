@@ -38,10 +38,12 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { UserAccount, UserRole } from '@/app/lib/types';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 export default function UserManagementPage() {
   const { user, managedUsers, addUser, updateUser, deleteUser } = useAuth();
   const { toast } = useToast();
+  const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<UserAccount | null>(null);
@@ -57,15 +59,15 @@ export default function UserManagementPage() {
     setMounted(true);
   }, []);
 
-  if (!mounted || !user || user.role !== 'admin') {
-    if (mounted && user?.role !== 'admin') {
-      return (
-        <div className="flex items-center justify-center min-h-screen">
-          <p className="text-destructive font-bold">Unauthorized Access</p>
-        </div>
-      );
+  // Redirect if not authorized
+  useEffect(() => {
+    if (mounted && (!user || user.role !== 'admin')) {
+      router.push('/');
     }
-    return null;
+  }, [mounted, user, router]);
+
+  if (!mounted || !user || user.role !== 'admin') {
+    return null; // Prevents flashing "Unauthorized Access" during redirection
   }
 
   const resetForm = () => {
