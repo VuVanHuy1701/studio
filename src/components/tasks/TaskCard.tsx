@@ -85,7 +85,6 @@ export function TaskCard({ task }: TaskCardProps) {
     return () => clearInterval(interval);
   }, [task.dueDate, task.completed]);
 
-  // Reset local state when dialog opens/closes
   useEffect(() => {
     if (progressDialogOpen) {
       setNotes(task.notes || '');
@@ -255,7 +254,7 @@ export function TaskCard({ task }: TaskCardProps) {
 
             {task.notes && (
               <div className={cn(
-                "mt-1 p-1.5 rounded border border-dashed text-[10px] md:text-xs text-muted-foreground",
+                "mt-1 p-1.5 rounded border border-dashed text-[10px] md:text-xs text-muted-foreground whitespace-pre-wrap",
                 hasNotesAndInProgress ? "bg-green-100/50 border-green-300 text-green-900" : "bg-muted/50 border-muted-foreground/30"
               )}>
                 <p className="font-bold flex items-center gap-1 mb-0.5">
