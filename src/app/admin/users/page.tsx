@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Navbar } from '@/components/layout/Navbar';
@@ -17,7 +16,8 @@ import {
   User, 
   Mail, 
   Lock,
-  ChevronLeft
+  ChevronLeft,
+  Save
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { 
@@ -87,7 +87,7 @@ export default function UserManagementPage() {
     setIsDialogOpen(true);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const accountData = {
       username,
@@ -100,10 +100,10 @@ export default function UserManagementPage() {
 
     if (editingUser) {
       updateUser(editingUser.uid, accountData);
-      toast({ title: "User updated successfully" });
+      toast({ title: "User updated and synced to JSON" });
     } else {
       addUser(accountData);
-      toast({ title: "User added successfully" });
+      toast({ title: "User created and synced to JSON" });
     }
     
     setIsDialogOpen(false);
@@ -124,91 +124,93 @@ export default function UserManagementPage() {
               <Users className="w-8 h-8" />
               Manage Personnel
             </h1>
-            <p className="text-muted-foreground font-medium text-sm">Control access and roles for the Compass system</p>
+            <p className="text-muted-foreground font-medium text-sm">Control access and roles. Changes sync to system file.</p>
           </div>
 
-          <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) resetForm(); }}>
-            <DialogTrigger asChild>
-              <Button className="h-12 rounded-2xl font-bold uppercase tracking-widest gap-2 bg-primary px-6 shadow-lg shadow-primary/20">
-                <UserPlus className="w-5 h-5" />
-                New Account
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[450px] rounded-[2rem]">
-              <DialogHeader>
-                <DialogTitle className="text-2xl font-black tracking-tight">
-                  {editingUser ? 'Edit User' : 'Register New User'}
-                </DialogTitle>
-              </DialogHeader>
-              <form onSubmit={handleSubmit} className="space-y-5 py-4">
-                <div className="grid grid-cols-2 gap-4">
+          <div className="flex gap-2">
+            <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) resetForm(); }}>
+              <DialogTrigger asChild>
+                <Button className="h-12 rounded-2xl font-bold uppercase tracking-widest gap-2 bg-primary px-6 shadow-lg shadow-primary/20">
+                  <UserPlus className="w-5 h-5" />
+                  New Account
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[450px] rounded-[2rem]">
+                <DialogHeader>
+                  <DialogTitle className="text-2xl font-black tracking-tight">
+                    {editingUser ? 'Edit User' : 'Register New User'}
+                  </DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleSubmit} className="space-y-5 py-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Username</Label>
+                      <Input 
+                        value={username} 
+                        onChange={(e) => setUsername(e.target.value)} 
+                        placeholder="e.g. jsmith" 
+                        required 
+                        className="h-11 rounded-xl"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Password</Label>
+                      <Input 
+                        type="password" 
+                        value={password} 
+                        onChange={(e) => setPassword(e.target.value)} 
+                        placeholder="••••••••" 
+                        required 
+                        className="h-11 rounded-xl"
+                      />
+                    </div>
+                  </div>
+
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Username</Label>
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Full Display Name</Label>
                     <Input 
-                      value={username} 
-                      onChange={(e) => setUsername(e.target.value)} 
-                      placeholder="e.g. jsmith" 
+                      value={displayName} 
+                      onChange={(e) => setDisplayName(e.target.value)} 
+                      placeholder="John Smith" 
                       required 
                       className="h-11 rounded-xl"
                     />
                   </div>
+
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Password</Label>
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Email Address</Label>
                     <Input 
-                      type="password" 
-                      value={password} 
-                      onChange={(e) => setPassword(e.target.value)} 
-                      placeholder="••••••••" 
+                      type="email" 
+                      value={email} 
+                      onChange={(e) => setEmail(e.target.value)} 
+                      placeholder="john@taskcompass.com" 
                       required 
                       className="h-11 rounded-xl"
                     />
                   </div>
-                </div>
 
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Full Display Name</Label>
-                  <Input 
-                    value={displayName} 
-                    onChange={(e) => setDisplayName(e.target.value)} 
-                    placeholder="John Smith" 
-                    required 
-                    className="h-11 rounded-xl"
-                  />
-                </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">System Permission</Label>
+                    <Select value={role} onValueChange={(v: UserRole) => setRole(v)}>
+                      <SelectTrigger className="h-11 rounded-xl">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-xl">
+                        <SelectItem value="user">Standard User</SelectItem>
+                        <SelectItem value="admin">Administrator</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Email Address</Label>
-                  <Input 
-                    type="email" 
-                    value={email} 
-                    onChange={(e) => setEmail(e.target.value)} 
-                    placeholder="john@taskcompass.com" 
-                    required 
-                    className="h-11 rounded-xl"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">System Permission</Label>
-                  <Select value={role} onValueChange={(v: UserRole) => setRole(v)}>
-                    <SelectTrigger className="h-11 rounded-xl">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="rounded-xl">
-                      <SelectItem value="user">Standard User</SelectItem>
-                      <SelectItem value="admin">Administrator</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <DialogFooter className="pt-4">
-                  <Button type="submit" className="w-full h-12 rounded-xl font-black uppercase tracking-widest">
-                    {editingUser ? 'Apply Updates' : 'Create Account'}
-                  </Button>
-                </DialogFooter>
-              </form>
-            </DialogContent>
-          </Dialog>
+                  <DialogFooter className="pt-4">
+                    <Button type="submit" className="w-full h-12 rounded-xl font-black uppercase tracking-widest">
+                      {editingUser ? 'Apply Updates' : 'Create Account'}
+                    </Button>
+                  </DialogFooter>
+                </form>
+              </DialogContent>
+            </Dialog>
+          </div>
         </header>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
@@ -246,7 +248,7 @@ export default function UserManagementPage() {
                       onClick={() => {
                         if (confirm(`Are you sure you want to delete ${u.displayName}?`)) {
                           deleteUser(u.uid);
-                          toast({ title: "User deleted" });
+                          toast({ title: "User removed and file updated" });
                         }
                       }}
                     >

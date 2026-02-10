@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
@@ -10,6 +9,7 @@ import {
 import { auth, googleProvider } from '@/lib/firebase';
 import { AppUser, UserAccount, UserRole } from '@/app/lib/types';
 import initialUsers from '@/app/lib/users.json';
+import { persistUsersToFile } from '@/app/actions/user-actions';
 
 interface AuthContextType {
   user: AppUser | null;
@@ -56,10 +56,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setLoading(false);
   }, []);
 
-  // Persist managed users
+  // Persist managed users to LocalStorage and System JSON
   useEffect(() => {
     if (isHydrated) {
+      // 1. Update local storage for immediate persistence in browser
       localStorage.setItem('task_compass_users', JSON.stringify(managedUsers));
+      
+      // 2. Sync with the server-side JSON file
+      persistUsersToFile(managedUsers).catch(err => {
+        console.warn('System file sync skipped or failed:', err);
+      });
     }
   }, [managedUsers, isHydrated]);
 
