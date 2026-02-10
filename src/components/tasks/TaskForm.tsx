@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
@@ -29,7 +28,7 @@ interface TaskFormProps {
 export function TaskForm({ taskToEdit, open: externalOpen, onOpenChange: setExternalOpen }: TaskFormProps) {
   const { addTask, updateTask } = useTasks();
   const { t } = useSettings();
-  const { user, knownUsers } = useAuth();
+  const { user, managedUsers } = useAuth();
   const [internalOpen, setInternalOpen] = useState(false);
   
   const open = externalOpen !== undefined ? externalOpen : internalOpen;
@@ -48,8 +47,11 @@ export function TaskForm({ taskToEdit, open: externalOpen, onOpenChange: setExte
 
   const filteredUsers = useMemo(() => {
     const search = userSearch.toLowerCase().trim();
-    return knownUsers.filter(u => u.name.toLowerCase().includes(search));
-  }, [userSearch, knownUsers]);
+    return managedUsers.filter(u => 
+      u.displayName?.toLowerCase().includes(search) || 
+      u.username.toLowerCase().includes(search)
+    );
+  }, [userSearch, managedUsers]);
 
   useEffect(() => {
     if (taskToEdit && open) {
@@ -209,19 +211,19 @@ export function TaskForm({ taskToEdit, open: externalOpen, onOpenChange: setExte
                   </button>
                   {filteredUsers.map(u => (
                     <button
-                      key={u.id}
+                      key={u.uid}
                       type="button"
-                      onClick={() => toggleUserSelection(u.name)}
+                      onClick={() => toggleUserSelection(u.displayName || u.username)}
                       className={cn(
                         "w-full flex items-center justify-between px-2 py-1.5 text-xs rounded-md transition-colors",
-                        assignedUsers.includes(u.name) ? "bg-primary/10 text-primary font-bold" : "hover:bg-muted"
+                        assignedUsers.includes(u.displayName || u.username) ? "bg-primary/10 text-primary font-bold" : "hover:bg-muted"
                       )}
                     >
                       <div className="flex items-center gap-1.5">
                         <User className="w-3 h-3" />
-                        {u.name}
+                        {u.displayName || u.username}
                       </div>
-                      {assignedUsers.includes(u.name) && <Check className="w-3 h-3" />}
+                      {assignedUsers.includes(u.displayName || u.username) && <Check className="w-3 h-3" />}
                     </button>
                   ))}
                 </div>
