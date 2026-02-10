@@ -1,99 +1,91 @@
+
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { 
-  User, 
   signInWithPopup, 
   signOut, 
   onAuthStateChanged 
 } from 'firebase/auth';
 import { auth, googleProvider } from '@/lib/firebase';
-import { AppUser, UserRole } from '@/app/lib/types';
+import { AppUser, UserAccount, UserRole } from '@/app/lib/types';
+import initialUsers from '@/app/lib/users.json';
 
 interface AuthContextType {
   user: AppUser | null;
   loading: boolean;
   loginWithGoogle: () => Promise<void>;
-  loginAsMockUser: (username: string) => Promise<void>;
-  loginAsAdmin: (username: string, password: string) => Promise<boolean>;
+  loginWithCredentials: (username: string, password: string) => Promise<boolean>;
   logout: () => Promise<void>;
-  knownUsers: { name: string; id: string }[];
+  // User Management
+  managedUsers: UserAccount[];
+  addUser: (account: Omit<UserAccount, 'uid'>) => void;
+  updateUser: (uid: string, updates: Partial<UserAccount>) => void;
+  deleteUser: (uid: string) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// --- CREDENTIALS CONFIGURATION ---
-const ADMIN_CREDENTIALS = {
-  username: 'admin',
-  password: 'admin@123'
-};
-
-const MOCK_USERS = [
-  { name: 'Alice', id: 'mock-alice' },
-  { name: 'Bob', id: 'mock-bob' },
-  { name: 'Charlie', id: 'mock-charlie' },
-  { name: 'Dana', id: 'mock-dana' },
-];
-// ---------------------------------
-
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [managedUsers, setManagedUsers] = useState<UserAccount[]>([]);
+  const [isHydrated, setIsHydrated] = useState(false);
 
+  // Load managed users from LocalStorage or seed from JSON
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      if (firebaseUser) {
-        setUser({
-          uid: firebaseUser.uid,
-          email: firebaseUser.email,
-          displayName: firebaseUser.displayName,
-          photoURL: firebaseUser.photoURL,
-          role: 'user'
-        });
-      } else {
-        const savedSession = localStorage.getItem('task_compass_session');
-        if (savedSession) {
-          setUser(JSON.parse(savedSession));
-        } else {
-          setUser(null);
-        }
+    const savedUsers = localStorage.getItem('task_compass_users');
+    if (savedUsers) {
+      try {
+        setManagedUsers(JSON.parse(savedUsers));
+      } catch (e) {
+        console.error("Failed to parse managed users", e);
+        setManagedUsers(initialUsers.accounts as UserAccount[]);
       }
-      setLoading(false);
-    });
-    return () => unsubscribe();
+    } else {
+      setManagedUsers(initialUsers.accounts as UserAccount[]);
+    }
+    
+    // Auth state from LocalStorage session
+    const savedSession = localStorage.getItem('task_compass_session');
+    if (savedSession) {
+      setUser(JSON.parse(savedSession));
+    }
+
+    setIsHydrated(true);
+    setLoading(false);
   }, []);
+
+  // Persist managed users
+  useEffect(() => {
+    if (isHydrated) {
+      localStorage.setItem('task_compass_users', JSON.stringify(managedUsers));
+    }
+  }, [managedUsers, isHydrated]);
 
   const loginWithGoogle = async () => {
     try {
-      await signInWithPopup(auth, googleProvider);
+      const result = await signInWithPopup(auth, googleProvider);
+      const newUser: AppUser = {
+        uid: result.user.uid,
+        email: result.user.email,
+        displayName: result.user.displayName,
+        photoURL: result.user.photoURL,
+        role: 'user'
+      };
+      setUser(newUser);
+      localStorage.setItem('task_compass_session', JSON.stringify(newUser));
     } catch (error) {
       console.error("Login failed", error);
     }
   };
 
-  const loginAsMockUser = async (username: string) => {
-    const mockUser: AppUser = {
-      uid: `mock-${username.toLowerCase()}`,
-      email: `${username.toLowerCase()}@example.com`,
-      displayName: username,
-      photoURL: null,
-      role: 'user'
-    };
-    setUser(mockUser);
-    localStorage.setItem('task_compass_session', JSON.stringify(mockUser));
-  };
-
-  const loginAsAdmin = async (username: string, password: string): Promise<boolean> => {
-    if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
-      const adminUser: AppUser = {
-        uid: 'admin-id',
-        email: 'admin@taskcompass.com',
-        displayName: 'Administrator',
-        photoURL: null,
-        role: 'admin'
-      };
-      setUser(adminUser);
-      localStorage.setItem('task_compass_session', JSON.stringify(adminUser));
+  const loginWithCredentials = async (username: string, password: string): Promise<boolean> => {
+    const account = managedUsers.find(u => u.username === username && u.password === password);
+    if (account) {
+      const { password: _, ...safeUser } = account;
+      setUser(safeUser);
+      localStorage.setItem('task_compass_session', JSON.stringify(safeUser));
       return true;
     }
     return false;
@@ -109,15 +101,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Admin Actions
+  const addUser = (account: Omit<UserAccount, 'uid'>) => {
+    const newAccount = { ...account, uid: `user-${Math.random().toString(36).substr(2, 9)}` };
+    setManagedUsers(prev => [...prev, newAccount]);
+  };
+
+  const updateUser = (uid: string, updates: Partial<UserAccount>) => {
+    setManagedUsers(prev => prev.map(u => u.uid === uid ? { ...u, ...updates } : u));
+    // Update current session if the user edited themselves
+    if (user?.uid === uid) {
+      const updatedUser = { ...user, ...updates };
+      delete (updatedUser as any).password;
+      setUser(updatedUser as AppUser);
+      localStorage.setItem('task_compass_session', JSON.stringify(updatedUser));
+    }
+  };
+
+  const deleteUser = (uid: string) => {
+    if (uid === 'admin-id') return; // Protect system admin
+    setManagedUsers(prev => prev.filter(u => u.uid !== uid));
+    if (user?.uid === uid) logout();
+  };
+
   return (
     <AuthContext.Provider value={{ 
       user, 
       loading, 
       loginWithGoogle, 
-      loginAsMockUser, 
-      loginAsAdmin, 
+      loginWithCredentials,
       logout,
-      knownUsers: MOCK_USERS 
+      managedUsers,
+      addUser,
+      updateUser,
+      deleteUser
     }}>
       {children}
     </AuthContext.Provider>

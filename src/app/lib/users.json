@@ -1,0 +1,29 @@
+
+{
+  "accounts": [
+    {
+      "uid": "admin-id",
+      "username": "admin",
+      "password": "admin@123",
+      "displayName": "System Administrator",
+      "email": "admin@taskcompass.com",
+      "role": "admin"
+    },
+    {
+      "uid": "user-alice",
+      "username": "alice",
+      "password": "password123",
+      "displayName": "Alice",
+      "email": "alice@example.com",
+      "role": "user"
+    },
+    {
+      "uid": "user-bob",
+      "username": "bob",
+      "password": "password123",
+      "displayName": "Bob",
+      "email": "bob@example.com",
+      "role": "user"
+    }
+  ]
+}

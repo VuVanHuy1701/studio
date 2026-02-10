@@ -11,6 +11,11 @@ export interface AppUser {
   role: UserRole;
 }
 
+export interface UserAccount extends AppUser {
+  username: string;
+  password?: string; // Only stored for management purposes in this prototype
+}
+
 export interface Task {
   id: string;
   title: string;
@@ -18,13 +23,13 @@ export interface Task {
   category: Category;
   dueDate: Date;
   completed: boolean;
-  completedAt?: Date; // Added to track when the task was finished
+  completedAt?: Date; 
   priority: 'Low' | 'Medium' | 'High';
-  assignedTo: string[]; // List of UIDs or Names, ordered by rank
+  assignedTo: string[]; 
   createdBy?: string;
-  notes?: string; // Feedback for uncompleted admin tasks
-  additionalTimeAllocated?: boolean; // New flag for extended deadlines
-  progress?: number; // Task completion percentage (0-100)
+  notes?: string; 
+  additionalTimeAllocated?: boolean; 
+  progress?: number; 
 }
 
 export interface ProgressStats {

@@ -1,8 +1,9 @@
+
 "use client";
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Compass, CheckCircle2, BarChart3, Moon, Sun, Globe, LogIn, LogOut, User, ShieldCheck, UserCircle } from 'lucide-react';
+import { Compass, CheckCircle2, BarChart3, Moon, Sun, Globe, LogIn, LogOut, User, ShieldCheck, Users, UserCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSettings } from '@/app/context/SettingsContext';
 import { useAuth } from '@/app/context/AuthContext';
@@ -35,28 +36,24 @@ import { useToast } from '@/hooks/use-toast';
 export function Navbar() {
   const pathname = usePathname();
   const { theme, toggleTheme, language, setLanguage, t } = useSettings();
-  const { user, loginWithGoogle, loginAsMockUser, loginAsAdmin, logout } = useAuth();
+  const { user, loginWithGoogle, loginWithCredentials, logout, managedUsers } = useAuth();
   const { toast } = useToast();
   
-  const [adminUsername, setAdminUsername] = useState('');
-  const [adminPassword, setAdminPassword] = useState('');
+  const [loginUsername, setLoginUsername] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
   const [loginDialogOpen, setLoginDialogOpen] = useState(false);
 
-  const handleAdminLogin = async (e: React.FormEvent) => {
+  const handleCredentialsLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    const success = await loginAsAdmin(adminUsername, adminPassword);
+    const success = await loginWithCredentials(loginUsername, loginPassword);
     if (success) {
-      toast({ title: "Admin logged in successfully" });
+      toast({ title: "Logged in successfully" });
       setLoginDialogOpen(false);
+      setLoginUsername('');
+      setLoginPassword('');
     } else {
-      toast({ title: "Invalid credentials", variant: "destructive" });
+      toast({ title: "Invalid username or password", variant: "destructive" });
     }
-  };
-
-  const handleMockLogin = (name: string) => {
-    loginAsMockUser(name);
-    toast({ title: `Logged in as ${name}` });
-    setLoginDialogOpen(false);
   };
 
   const navItems = [
@@ -64,6 +61,11 @@ export function Navbar() {
     { name: t('myTasks'), href: '/tasks', icon: CheckCircle2 },
     { name: t('progress'), href: '/progress', icon: BarChart3 },
   ];
+
+  // Admin-only management link
+  if (user?.role === 'admin') {
+    navItems.push({ name: 'Users', href: '/admin/users', icon: Users });
+  }
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-2xl border-t shadow-[0_-8px_30px_-10px_rgba(0,0,0,0.1)] md:bottom-auto md:top-0 md:border-t-0 md:border-b transition-all duration-300">
@@ -164,6 +166,42 @@ export function Navbar() {
                   <DialogTitle className="text-2xl font-black text-center tracking-tight">Welcome Back</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-8">
+                  <form onSubmit={handleCredentialsLogin} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="login-user" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Username</Label>
+                      <Input 
+                        id="login-user" 
+                        className="h-12 rounded-xl border-2 bg-muted/30 focus:bg-background transition-all" 
+                        value={loginUsername} 
+                        onChange={(e) => setLoginUsername(e.target.value)} 
+                        placeholder="your_username" 
+                        required 
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="login-pass" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Password</Label>
+                      <Input 
+                        id="login-pass" 
+                        type="password" 
+                        className="h-12 rounded-xl border-2 bg-muted/30 focus:bg-background transition-all" 
+                        value={loginPassword} 
+                        onChange={(e) => setLoginPassword(e.target.value)} 
+                        placeholder="••••••••" 
+                        required 
+                      />
+                    </div>
+                    <Button type="submit" className="w-full h-12 rounded-xl font-black uppercase tracking-widest bg-primary hover:scale-[1.02] transition-transform shadow-lg shadow-primary/20">
+                      Sign In
+                    </Button>
+                  </form>
+
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center"><span className="w-full border-t" /></div>
+                    <div className="relative flex justify-center text-[10px] font-black uppercase tracking-widest">
+                      <span className="bg-background px-3 text-muted-foreground">Or continue with</span>
+                    </div>
+                  </div>
+
                   <Button onClick={loginWithGoogle} variant="outline" className="w-full flex items-center justify-center gap-3 h-14 rounded-2xl border-2 hover:bg-primary/5 transition-all group">
                     <svg className="w-6 h-6 transition-transform group-hover:scale-110" viewBox="0 0 24 24">
                       <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -171,39 +209,16 @@ export function Navbar() {
                       <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
                       <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
                     </svg>
-                    <span className="font-black uppercase tracking-widest text-xs">{t('login')}</span>
+                    <span className="font-black uppercase tracking-widest text-xs">Google Login</span>
                   </Button>
-
-                  <div className="relative">
-                    <div className="absolute inset-0 flex items-center"><span className="w-full border-t" /></div>
-                    <div className="relative flex justify-center text-[10px] font-black uppercase tracking-widest"><span className="bg-background px-3 text-muted-foreground">Demo Accounts</span></div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <Button variant="secondary" className="rounded-xl font-bold h-12 hover:bg-primary hover:text-white transition-all" onClick={() => handleMockLogin('Alice')}>
-                      <UserCircle className="mr-2 w-4 h-4" />Alice
-                    </Button>
-                    <Button variant="secondary" className="rounded-xl font-bold h-12 hover:bg-primary hover:text-white transition-all" onClick={() => handleMockLogin('Bob')}>
-                      <UserCircle className="mr-2 w-4 h-4" />Bob
-                    </Button>
-                  </div>
-
-                  <div className="relative">
-                    <div className="absolute inset-0 flex items-center"><span className="w-full border-t" /></div>
-                    <div className="relative flex justify-center text-[10px] font-black uppercase tracking-widest"><span className="bg-background px-3 text-muted-foreground">System Admin</span></div>
-                  </div>
-
-                  <form onSubmit={handleAdminLogin} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="admin-user" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Username</Label>
-                      <Input id="admin-user" className="h-12 rounded-xl border-2 bg-muted/30 focus:bg-background transition-all" value={adminUsername} onChange={(e) => setAdminUsername(e.target.value)} placeholder="admin" required />
+                  
+                  <div className="bg-muted/30 p-4 rounded-2xl border border-dashed border-primary/20">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-primary mb-2">Demo Access</p>
+                    <div className="flex flex-col gap-1 text-[11px] font-medium text-muted-foreground">
+                      <div className="flex justify-between"><span>Admin:</span> <code className="bg-background px-1 rounded">admin / admin@123</code></div>
+                      <div className="flex justify-between"><span>User:</span> <code className="bg-background px-1 rounded">alice / password123</code></div>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="admin-pass" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Password</Label>
-                      <Input id="admin-pass" type="password" className="h-12 rounded-xl border-2 bg-muted/30 focus:bg-background transition-all" value={adminPassword} onChange={(e) => setAdminPassword(e.target.value)} placeholder="••••••••" required />
-                    </div>
-                    <Button type="submit" className="w-full h-12 rounded-xl font-black uppercase tracking-widest bg-primary hover:scale-[1.02] transition-transform">Access Admin Panel</Button>
-                  </form>
+                  </div>
                 </div>
               </DialogContent>
             </Dialog>
