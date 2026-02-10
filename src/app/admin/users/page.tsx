@@ -142,19 +142,19 @@ export default function UserManagementPage() {
             <p className="text-muted-foreground font-medium text-sm">Control access and roles. Changes sync to system file.</p>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-            <div className="relative flex-1 sm:min-w-[300px]">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto items-center">
+            <div className="relative flex-1 sm:min-w-[280px] w-full">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
               <Input 
-                placeholder="Search name, username or email..." 
+                placeholder="Search personnel..." 
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 h-12 rounded-2xl bg-white/50 border-primary/10 focus:border-primary/30 transition-all"
+                className="pl-9 h-10 rounded-xl bg-white/50 border-primary/10 focus:border-primary/30 transition-all text-sm"
               />
               {searchQuery && (
                 <button 
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-muted text-muted-foreground"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-muted text-muted-foreground"
                 >
                   <X className="w-3 h-3" />
                 </button>
@@ -163,8 +163,8 @@ export default function UserManagementPage() {
 
             <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) resetForm(); }}>
               <DialogTrigger asChild>
-                <Button className="h-12 rounded-2xl font-bold uppercase tracking-widest gap-2 bg-primary px-6 shadow-lg shadow-primary/20">
-                  <UserPlus className="w-5 h-5" />
+                <Button className="h-10 rounded-xl font-bold uppercase tracking-widest gap-2 bg-primary px-5 shadow-md shadow-primary/10 text-xs w-full sm:w-auto">
+                  <UserPlus className="w-4 h-4" />
                   New Account
                 </Button>
               </DialogTrigger>
