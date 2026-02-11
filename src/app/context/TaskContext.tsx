@@ -1,10 +1,11 @@
 
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { Task } from '@/app/lib/types';
 import { useAuth } from '@/app/context/AuthContext';
 import { getTasksFromFile, persistTasksToFile } from '@/app/actions/task-actions';
+import { format } from 'date-fns';
 
 interface TaskContextType {
   tasks: Task[];
@@ -24,6 +25,10 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
   const [allTasks, setAllTasks] = useState<Task[]>([]);
   const [isHydrated, setIsHydrated] = useState(false);
   const { user } = useAuth();
+  
+  // Notification state
+  const [notifiedTaskIds, setNotifiedTaskIds] = useState<Set<string>>(new Set());
+  const initialLoadRef = useRef(true);
 
   const refreshTasks = useCallback(async () => {
     try {
@@ -44,9 +49,88 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
     setIsHydrated(true);
   }, []);
 
+  // Initial setup and polling
   useEffect(() => {
     refreshTasks();
+    
+    // Request notification permission
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      if (Notification.permission === 'default') {
+        Notification.requestPermission();
+      }
+    }
+
+    // Load already notified IDs
+    const saved = localStorage.getItem('task_compass_notified_ids');
+    if (saved) {
+      try {
+        setNotifiedTaskIds(new Set(JSON.parse(saved)));
+      } catch (e) {
+        console.error("Error parsing notified IDs", e);
+      }
+    }
+
+    // Simple polling for "live" updates in this prototype
+    const interval = setInterval(refreshTasks, 30000); // Poll every 30s
+    return () => clearInterval(interval);
   }, [refreshTasks]);
+
+  // Handle Notifications for new tasks
+  useEffect(() => {
+    if (!isHydrated || !user || allTasks.length === 0) return;
+
+    // On the very first load, we don't want to notify for all existing tasks
+    if (initialLoadRef.current) {
+      const currentIds = allTasks.map(t => t.id);
+      const newNotified = new Set([...Array.from(notifiedTaskIds), ...currentIds]);
+      setNotifiedTaskIds(newNotified);
+      localStorage.setItem('task_compass_notified_ids', JSON.stringify(Array.from(newNotified)));
+      initialLoadRef.current = false;
+      return;
+    }
+
+    const tasksToNotify = allTasks.filter(t => {
+      const isAssignedToMe = t.assignedTo.some(assignee => 
+        assignee === user.displayName || 
+        assignee === user.email || 
+        assignee === user.uid ||
+        (user.username && assignee === user.username) ||
+        (assignee === 'Me' && t.createdBy === user.uid)
+      );
+      
+      return isAssignedToMe && !notifiedTaskIds.has(t.id) && !t.completed;
+    });
+
+    if (tasksToNotify.length > 0) {
+      tasksToNotify.forEach(t => {
+        if (typeof window !== 'undefined' && Notification.permission === 'granted') {
+          const body = `Time: ${format(new Date(t.dueDate), 'HH:mm - MMM dd')}\nPriority: ${t.priority}`;
+          
+          // Use ServiceWorker if available for better PWA support, else fallback to standard Notification
+          if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+            navigator.serviceWorker.ready.then(registration => {
+              registration.showNotification(`Task Received: ${t.title}`, {
+                body: body,
+                icon: 'https://picsum.photos/seed/taskicon192/192/192',
+                badge: 'https://picsum.photos/seed/taskbadge/96/96',
+                data: { taskId: t.id },
+                vibrate: [200, 100, 200]
+              });
+            });
+          } else {
+            new Notification(`Task Received: ${t.title}`, { body, icon: 'https://picsum.photos/seed/taskicon192/192/192' });
+          }
+        }
+      });
+
+      setNotifiedTaskIds(prev => {
+        const next = new Set(prev);
+        tasksToNotify.forEach(t => next.add(t.id));
+        localStorage.setItem('task_compass_notified_ids', JSON.stringify(Array.from(next)));
+        return next;
+      });
+    }
+  }, [allTasks, user, isHydrated, notifiedTaskIds]);
 
   useEffect(() => {
     if (isHydrated) {
