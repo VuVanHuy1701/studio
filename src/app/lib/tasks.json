@@ -1,4 +1,3 @@
-
 {
   "tasks": [
     {
@@ -30,9 +29,39 @@
       ],
       "createdBy": "admin-id",
       "additionalTimeAllocated": true,
-      "progress": 18,
+      "progress": 35,
       "id": "kwe2364",
       "notes": "thử tiến trình trên cái này.\nchia việc oke\nthêm user oke\nquản lý user oke\n+ đang test multiple\n+ test PWA\n+ thêm nhìn mật khẩu\n+ thêm thông báo đẩy\n"
+    },
+    {
+      "title": "thử tạo task trên test",
+      "description": "thử lần 1",
+      "category": "Work",
+      "dueDate": "2026-02-10T09:30:00.000Z",
+      "completed": false,
+      "priority": "Medium",
+      "assignedTo": [
+        "Test"
+      ],
+      "createdBy": "user-ri1bptvab",
+      "additionalTimeAllocated": false,
+      "progress": 21,
+      "id": "k8yr2as"
+    },
+    {
+      "title": "test multiple device",
+      "description": "test thử lần 1",
+      "category": "Work",
+      "dueDate": "2026-02-11T09:30:00.000Z",
+      "completed": false,
+      "priority": "Medium",
+      "assignedTo": [
+        "Test"
+      ],
+      "createdBy": "admin-id",
+      "additionalTimeAllocated": false,
+      "progress": 10,
+      "id": "z8noyqa"
     }
   ]
 }
