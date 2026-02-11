@@ -1,9 +1,9 @@
 
-const CACHE_NAME = 'task-compass-v1';
+const CACHE_NAME = 'task-compass-cache-v1';
 const ASSETS_TO_CACHE = [
   '/',
   '/manifest.json',
-  'https://picsum.photos/seed/taskicon192/192/192'
+  'https://picsum.photos/seed/taskicon192/192/192',
 ];
 
 self.addEventListener('install', (event) => {
@@ -27,37 +27,32 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Simple network-first strategy for dynamic content, cache-first for static assets
-  if (event.request.mode === 'navigate') {
-    event.respondWith(
-      fetch(event.request).catch(() => caches.match('/'))
-    );
-    return;
-  }
+  // Only cache GET requests
+  if (event.request.method !== 'GET') return;
 
   event.respondWith(
-    caches.match(event.request).then((response) => {
-      return response || fetch(event.request);
+    fetch(event.request).catch(() => {
+      return caches.match(event.request);
     })
   );
 });
 
-// Handle Push Notification Clicks
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
+  
+  const urlToOpen = event.notification.data?.url || '/';
 
   event.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-      if (clientList.length > 0) {
-        let client = clientList[0];
-        for (let i = 0; i < clientList.length; i++) {
-          if (clientList[i].focused) {
-            client = clientList[i];
-          }
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
+      for (let i = 0; i < windowClients.length; i++) {
+        const client = windowClients[i];
+        if (client.url === urlToOpen && 'focus' in client) {
+          return client.focus();
         }
-        return client.focus();
       }
-      return clients.openWindow('/');
+      if (clients.openWindow) {
+        return clients.openWindow(urlToOpen);
+      }
     })
   );
 });

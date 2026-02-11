@@ -26,7 +26,6 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
   const [isHydrated, setIsHydrated] = useState(false);
   const { user } = useAuth();
   
-  // Notification state
   const [notifiedTaskIds, setNotifiedTaskIds] = useState<Set<string>>(new Set());
   const initialLoadRef = useRef(true);
 
@@ -49,18 +48,15 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
     setIsHydrated(true);
   }, []);
 
-  // Initial setup and polling
   useEffect(() => {
     refreshTasks();
     
-    // Request notification permission
     if (typeof window !== 'undefined' && 'Notification' in window) {
       if (Notification.permission === 'default') {
         Notification.requestPermission();
       }
     }
 
-    // Load already notified IDs
     const saved = localStorage.getItem('task_compass_notified_ids');
     if (saved) {
       try {
@@ -70,16 +66,13 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
-    // Simple polling for "live" updates in this prototype
-    const interval = setInterval(refreshTasks, 30000); // Poll every 30s
+    const interval = setInterval(refreshTasks, 30000);
     return () => clearInterval(interval);
   }, [refreshTasks]);
 
-  // Handle Notifications for new tasks
   useEffect(() => {
     if (!isHydrated || !user || allTasks.length === 0) return;
 
-    // On the very first load, we don't want to notify for all existing tasks
     if (initialLoadRef.current) {
       const currentIds = allTasks.map(t => t.id);
       const newNotified = new Set([...Array.from(notifiedTaskIds), ...currentIds]);
@@ -104,21 +97,24 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
     if (tasksToNotify.length > 0) {
       tasksToNotify.forEach(t => {
         if (typeof window !== 'undefined' && Notification.permission === 'granted') {
-          const body = `Time: ${format(new Date(t.dueDate), 'HH:mm - MMM dd')}\nPriority: ${t.priority}`;
+          const bodyText = `Due: ${format(new Date(t.dueDate), 'HH:mm - MMM dd')}\nPriority: ${t.priority}`;
           
-          // Use ServiceWorker if available for better PWA support, else fallback to standard Notification
-          if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+          if ('serviceWorker' in navigator) {
             navigator.serviceWorker.ready.then(registration => {
               registration.showNotification(`Task Received: ${t.title}`, {
-                body: body,
+                body: bodyText,
                 icon: 'https://picsum.photos/seed/taskicon192/192/192',
                 badge: 'https://picsum.photos/seed/taskbadge/96/96',
-                data: { taskId: t.id },
-                vibrate: [200, 100, 200]
+                tag: t.id,
+                data: { url: window.location.origin + '/tasks' },
+                vibrate: [100, 50, 100],
+                requireInteraction: true
               });
+            }).catch(err => {
+              new Notification(`Task Received: ${t.title}`, { body: bodyText });
             });
           } else {
-            new Notification(`Task Received: ${t.title}`, { body, icon: 'https://picsum.photos/seed/taskicon192/192/192' });
+            new Notification(`Task Received: ${t.title}`, { body: bodyText });
           }
         }
       });
