@@ -1,11 +1,12 @@
 
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { Task } from '@/app/lib/types';
 import { useAuth } from '@/app/context/AuthContext';
 import { getTasksFromFile, persistTasksToFile } from '@/app/actions/task-actions';
 import { format } from 'date-fns';
+import { useToast } from '@/hooks/use-toast';
 
 interface TaskContextType {
   tasks: Task[];
@@ -25,6 +26,7 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
   const [allTasks, setAllTasks] = useState<Task[]>([]);
   const [isHydrated, setIsHydrated] = useState(false);
   const { user } = useAuth();
+  const { toast } = useToast();
   
   const [notifiedTaskIds, setNotifiedTaskIds] = useState<Set<string>>(new Set());
 
@@ -50,7 +52,7 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     refreshTasks();
     
-    // Request permission on mount
+    // Request notification permission
     if (typeof window !== 'undefined' && 'Notification' in window) {
       if (Notification.permission === 'default') {
         Notification.requestPermission();
@@ -96,13 +98,19 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
 
     if (tasksToNotify.length > 0) {
       tasksToNotify.forEach(t => {
+        const dueStr = format(new Date(t.dueDate), 'HH:mm - MMM dd');
+        const bodyText = `Time: ${dueStr} | Importance: ${t.priority}`;
+        
+        // 1. In-app Toast (On screen notification)
+        toast({
+          title: "New task received",
+          description: `${t.title} - ${bodyText}`,
+        });
+
+        // 2. System Push Notification (PWA)
         if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
-          const dueStr = format(new Date(t.dueDate), 'HH:mm - MMM dd');
-          const bodyText = `Task: ${t.title}\nDue: ${dueStr}\nPriority: ${t.priority}`;
-          
-          const notificationTitle = `New task received`;
           const notificationOptions = {
-            body: bodyText,
+            body: `${t.title}\n${bodyText}`,
             icon: 'https://picsum.photos/seed/taskicon192/192/192',
             badge: 'https://picsum.photos/seed/taskbadge/96/96',
             tag: t.id,
@@ -113,10 +121,10 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
 
           if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
             navigator.serviceWorker.ready.then(registration => {
-              registration.showNotification(notificationTitle, notificationOptions);
+              registration.showNotification("New task received", notificationOptions);
             });
           } else {
-            new Notification(notificationTitle, { body: bodyText });
+            new Notification("New task received", { body: `${t.title}\n${bodyText}` });
           }
         }
       });
@@ -129,7 +137,7 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
         return next;
       });
     }
-  }, [allTasks, user, isHydrated, notifiedTaskIds]);
+  }, [allTasks, user, isHydrated, notifiedTaskIds, toast]);
 
   useEffect(() => {
     if (isHydrated) {
