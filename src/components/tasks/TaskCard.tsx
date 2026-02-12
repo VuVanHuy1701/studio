@@ -128,9 +128,8 @@ export function TaskCard({ task }: TaskCardProps) {
   };
 
   const handleMarkComplete = () => {
-    updateTask(task.id, { completed: true, progress: 100 });
-    setProgressDialogOpen(false);
-    toast({ title: "Task Completed" });
+    setLocalProgress(100);
+    setShowNotesInput(true);
   };
 
   const handleNotCompleted = () => {
@@ -138,14 +137,15 @@ export function TaskCard({ task }: TaskCardProps) {
   };
 
   const handleSaveNotes = () => {
+    const isNowCompleted = localProgress === 100;
     updateTask(task.id, { 
       notes: notes, 
-      completed: localProgress === 100, 
+      completed: isNowCompleted, 
       progress: localProgress 
     });
     setProgressDialogOpen(false);
     setShowNotesInput(false);
-    toast({ title: "Progress Updated" });
+    toast({ title: isNowCompleted ? "Task Completed" : "Progress Updated" });
   };
 
   return (
@@ -392,7 +392,7 @@ export function TaskCard({ task }: TaskCardProps) {
               <div className="space-y-3">
                 <Label className="text-sm font-medium">Progress Notes for Administrator:</Label>
                 <Textarea 
-                  placeholder="Why is the task not completed? Any challenges for the team?" 
+                  placeholder={localProgress === 100 ? "Any closing comments for this completed task?" : "Why is the task not completed? Any challenges for the team?"}
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   className="min-h-[120px]"
@@ -400,7 +400,7 @@ export function TaskCard({ task }: TaskCardProps) {
               </div>
 
               <Button onClick={handleSaveNotes} className="w-full bg-accent text-accent-foreground font-bold h-12 uppercase tracking-wide">
-                Submit Progress & Notes
+                {localProgress === 100 ? "Complete Task & Save Notes" : "Submit Progress & Notes"}
               </Button>
             </div>
           )}

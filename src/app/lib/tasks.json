@@ -68,60 +68,64 @@
       "description": "thử lần 1",
       "category": "Work",
       "dueDate": "2026-02-11T09:30:00.000Z",
-      "completed": false,
+      "completed": true,
       "priority": "High",
       "assignedTo": [
         "Test"
       ],
       "createdBy": "admin-id",
       "additionalTimeAllocated": true,
-      "progress": 6,
-      "id": "s4vjsf7"
+      "progress": 100,
+      "id": "s4vjsf7",
+      "completedAt": "2026-02-12T03:10:39.965Z"
     },
     {
       "title": "thông báo đẩy",
       "description": "lần 2",
       "category": "Work",
       "dueDate": "2026-02-11T09:30:00.000Z",
-      "completed": false,
+      "completed": true,
       "priority": "High",
       "assignedTo": [
         "Test"
       ],
       "createdBy": "admin-id",
       "additionalTimeAllocated": false,
-      "progress": 0,
-      "id": "09ntlfn"
+      "progress": 100,
+      "id": "09ntlfn",
+      "completedAt": "2026-02-12T03:10:40.830Z"
     },
     {
       "title": "thông báo đẩy",
       "description": "lần 3",
       "category": "Work",
       "dueDate": "2026-02-11T09:30:00.000Z",
-      "completed": false,
+      "completed": true,
       "priority": "High",
       "assignedTo": [
         "Test"
       ],
       "createdBy": "admin-id",
       "additionalTimeAllocated": false,
-      "progress": 0,
-      "id": "eztx4em"
+      "progress": 100,
+      "id": "eztx4em",
+      "completedAt": "2026-02-12T03:10:41.479Z"
     },
     {
       "title": "thông báo đẩy",
       "description": "lần 4",
       "category": "Work",
       "dueDate": "2026-02-11T09:30:00.000Z",
-      "completed": false,
+      "completed": true,
       "priority": "High",
       "assignedTo": [
         "Test"
       ],
       "createdBy": "admin-id",
       "additionalTimeAllocated": false,
-      "progress": 0,
-      "id": "8vgh3aq"
+      "progress": 100,
+      "id": "8vgh3aq",
+      "completedAt": "2026-02-12T03:10:46.641Z"
     },
     {
       "title": "thông báo đẩy",
