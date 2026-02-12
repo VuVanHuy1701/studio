@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
@@ -28,6 +29,7 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
   const { toast } = useToast();
   
   const [notifiedTaskIds, setNotifiedTaskIds] = useState<Set<string>>(new Set());
+  const [notifiedCompletedIds, setNotifiedCompletedIds] = useState<Set<string>>(new Set());
 
   const refreshTasks = useCallback(async () => {
     try {
@@ -63,23 +65,29 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (user) {
-      const saved = localStorage.getItem(`task_compass_notified_ids_${user.uid}`);
-      if (saved) {
-        try {
-          setNotifiedTaskIds(new Set(JSON.parse(saved)));
-        } catch (e) {
-          console.error("Error parsing notified IDs", e);
-        }
+      const savedNew = localStorage.getItem(`task_compass_notified_ids_${user.uid}`);
+      const savedCompleted = localStorage.getItem(`task_compass_notified_comp_ids_${user.uid}`);
+      
+      if (savedNew) {
+        try { setNotifiedTaskIds(new Set(JSON.parse(savedNew))); } catch (e) {}
       } else {
         setNotifiedTaskIds(new Set());
+      }
+
+      if (savedCompleted) {
+        try { setNotifiedCompletedIds(new Set(JSON.parse(savedCompleted))); } catch (e) {}
+      } else {
+        setNotifiedCompletedIds(new Set());
       }
     }
   }, [user]);
 
+  // Combined Notification Logic
   useEffect(() => {
     if (!isHydrated || !user || allTasks.length === 0) return;
 
-    const tasksToNotify = allTasks.filter(t => {
+    // 1. New Task Notifications (For assigned users)
+    const newTasksToNotify = allTasks.filter(t => {
       const isAssignedToMe = t.assignedTo.some(assignee => 
         assignee === user.displayName || 
         assignee === user.email || 
@@ -91,17 +99,16 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
       return isAssignedToMe && !notifiedTaskIds.has(t.id) && !t.completed;
     });
 
-    if (tasksToNotify.length > 0) {
-      tasksToNotify.forEach(t => {
+    if (newTasksToNotify.length > 0) {
+      newTasksToNotify.forEach(t => {
         const dueStr = format(new Date(t.dueDate), 'HH:mm - MMM dd');
         const importance = t.priority;
         const variant = t.priority.toLowerCase() as 'low' | 'medium' | 'high';
 
-        // 1. In-app Persistent Toast (Manually dismissed)
         toast({
           title: "New task assigned",
           description: (
-            <div className="flex flex-col gap-1 mt-1">
+            <div className="flex flex-col gap-0.5 mt-1">
               <div className="text-sm font-bold leading-tight">{t.title}</div>
               <div className="text-sm leading-tight opacity-90">{t.description || "No content"}</div>
               <div className="text-[11px] opacity-80 mt-1">
@@ -110,42 +117,74 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
             </div>
           ),
           variant: variant,
-          duration: 86400000, // Persistent until manually dismissed (24h)
+          duration: 86400000, 
         });
 
-        // 2. System Push Notification (PWA)
         if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
-          // Line 2: Title; Line 3: Content; Line 4: Deadline & Importance
           const systemBody = `${t.title}\n${t.description || 'No content'}\n${dueStr}; Importance: ${importance}`;
-          
-          const notificationOptions: NotificationOptions = {
+          new Notification("New task assigned", {
             body: systemBody,
-            icon: 'https://picsum.photos/seed/taskicon192/192/192',
-            badge: 'https://picsum.photos/seed/taskbadge/96/96',
-            tag: t.id,
-            data: { url: window.location.origin + '/tasks' },
-            vibrate: [200, 100, 200],
+            icon: 'https://picsum.photos/seed/taskicon/192/192',
             requireInteraction: true 
-          };
-
-          if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-            navigator.serviceWorker.ready.then(registration => {
-              registration.showNotification("New task assigned", notificationOptions);
-            });
-          } else {
-            new Notification("New task assigned", notificationOptions);
-          }
+          });
         }
       });
 
       setNotifiedTaskIds(prev => {
         const next = new Set(prev);
-        tasksToNotify.forEach(t => next.add(t.id));
+        newTasksToNotify.forEach(t => next.add(t.id));
         localStorage.setItem(`task_compass_notified_ids_${user.uid}`, JSON.stringify(Array.from(next)));
         return next;
       });
     }
-  }, [allTasks, user, isHydrated, notifiedTaskIds, toast]);
+
+    // 2. Task Completion Notifications (For Administrators)
+    if (user.role === 'admin') {
+      const completedTasksToNotify = allTasks.filter(t => 
+        t.completed && 
+        !notifiedCompletedIds.has(t.id) && 
+        t.completedBy && 
+        t.completedBy !== user.displayName // Don't notify admin if they completed it themselves
+      );
+
+      if (completedTasksToNotify.length > 0) {
+        completedTasksToNotify.forEach(t => {
+          const compTimeStr = t.completedAt ? format(new Date(t.completedAt), 'HH:mm - MMM dd') : 'Unknown';
+          
+          toast({
+            title: "Task completed",
+            variant: "low",
+            duration: 86400000,
+            description: (
+              <div className="flex flex-col gap-0.5 mt-1">
+                <div className="text-sm font-bold leading-tight">{t.title}</div>
+                <div className="text-[11px] leading-tight opacity-90 italic">"{t.description || 'No description'}"</div>
+                <div className="text-[11px] mt-1">Finished: <span className="font-medium">{compTimeStr}</span></div>
+                <div className="text-[11px] bg-white/40 p-1 rounded mt-1">Notes: {t.notes || 'No notes provided'}</div>
+                <div className="text-[11px] mt-1 font-bold">Completed by: {t.completedBy}</div>
+              </div>
+            ),
+          });
+
+          if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+            const systemBody = `${t.title}\n${t.description || 'No description'}\nFinished: ${compTimeStr}\nNotes: ${t.notes || 'None'}\nBy: ${t.completedBy}`;
+            new Notification("Task completed", {
+              body: systemBody,
+              icon: 'https://picsum.photos/seed/taskdone/192/192',
+              requireInteraction: true 
+            });
+          }
+        });
+
+        setNotifiedCompletedIds(prev => {
+          const next = new Set(prev);
+          completedTasksToNotify.forEach(t => next.add(t.id));
+          localStorage.setItem(`task_compass_notified_comp_ids_${user.uid}`, JSON.stringify(Array.from(next)));
+          return next;
+        });
+      }
+    }
+  }, [allTasks, user, isHydrated, notifiedTaskIds, notifiedCompletedIds, toast]);
 
   useEffect(() => {
     if (isHydrated) {
@@ -174,6 +213,7 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
           ...task, 
           completed: isNowCompleted,
           completedAt: isNowCompleted ? new Date() : undefined,
+          completedBy: isNowCompleted ? (user?.displayName || user?.username || 'Unknown User') : undefined,
           progress: isNowCompleted ? 100 : task.progress
         };
       }
@@ -186,16 +226,20 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
       if (task.id === id) {
         const isNowCompleted = updates.completed !== undefined ? updates.completed : task.completed;
         let completedAt = task.completedAt;
+        let completedBy = task.completedBy;
+
         if (!task.completed && isNowCompleted) {
           completedAt = new Date();
+          completedBy = user?.displayName || user?.username || 'Unknown User';
         } else if (isNowCompleted === false) {
           completedAt = undefined;
+          completedBy = undefined;
         }
 
         let progress = updates.progress !== undefined ? updates.progress : task.progress;
         if (isNowCompleted) progress = 100;
 
-        return { ...task, ...updates, completedAt, progress };
+        return { ...task, ...updates, completedAt, completedBy, progress };
       }
       return task;
     }));
@@ -207,10 +251,8 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
 
   const getVisibleTasks = () => {
     if (!user) return [];
-    
     return allTasks.filter(t => {
       if (t.createdBy === user.uid) return true;
-
       const isAssignedToMe = t.assignedTo.some(assignee => 
         assignee === user.displayName || 
         assignee === user.email || 
@@ -218,7 +260,6 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
         (user.username && assignee === user.username) ||
         (assignee === 'Me' && t.createdBy === user.uid)
       );
-
       return isAssignedToMe;
     });
   };

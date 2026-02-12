@@ -25,6 +25,7 @@ export interface Task {
   dueDate: Date;
   completed: boolean;
   completedAt?: Date; 
+  completedBy?: string; // Name or UID of the person who completed the task
   priority: 'Low' | 'Medium' | 'High';
   assignedTo: string[]; 
   createdBy?: string;
