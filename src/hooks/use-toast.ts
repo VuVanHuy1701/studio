@@ -8,7 +8,7 @@ import type {
 } from "@/components/ui/toast"
 
 const TOAST_LIMIT = 10
-const TOAST_REMOVE_DELAY = 86400000 // 24 hours (effectively persistent until user dismisses)
+const TOAST_REMOVE_DELAY = 86400000 // 24 hours (manual dismissal only)
 
 type ToasterToast = ToastProps & {
   id: string

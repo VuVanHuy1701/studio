@@ -97,7 +97,6 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
         const importance = t.priority;
         const description = `${t.title} - Time: ${dueStr} | Importance: ${importance}`;
         
-        // Map priority to toast variant
         const variant = t.priority.toLowerCase() as 'low' | 'medium' | 'high';
 
         // 1. In-app Persistent Toast (Manually dismissed)
@@ -105,7 +104,7 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
           title: "New task received",
           description: description,
           variant: variant,
-          // Note: duration is handled by TOAST_REMOVE_DELAY in hook
+          duration: 86400000, // Set to 24 hours to ensure it doesn't auto-dismiss
         });
 
         // 2. System Push Notification (PWA)
@@ -117,7 +116,7 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
             tag: t.id,
             data: { url: window.location.origin + '/tasks' },
             vibrate: [200, 100, 200],
-            requireInteraction: true // This keeps the notification visible until user clicks or closes it
+            requireInteraction: true // Keeps the notification visible until user clicks or closes it
           };
 
           if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
