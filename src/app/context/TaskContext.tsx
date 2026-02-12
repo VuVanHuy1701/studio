@@ -99,12 +99,12 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
 
         // 1. In-app Persistent Toast (Manually dismissed)
         toast({
-          title: t.title, // Line 1: Task title (bold)
+          title: t.title,
           description: (
             <div className="flex flex-col gap-0.5 mt-1">
-              <div className="text-sm leading-tight">{t.description || "No content"}</div> // Line 2: Task content
+              <div className="text-sm leading-tight">{t.description || "No content"}</div>
               <div className="text-[11px] opacity-80 mt-1">
-                {dueStr}; Importance: <span className="font-bold">{importance}</span> // Line 3: Task deadline; Importance (bold)
+                {dueStr}; Importance: <span className="font-bold">{importance}</span>
               </div>
             </div>
           ),
