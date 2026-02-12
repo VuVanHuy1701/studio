@@ -99,22 +99,24 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
 
         // 1. In-app Persistent Toast (Manually dismissed)
         toast({
-          title: t.title,
+          title: "New task assigned",
           description: (
-            <div className="flex flex-col gap-0.5 mt-1">
-              <div className="text-sm leading-tight">{t.description || "No content"}</div>
+            <div className="flex flex-col gap-1 mt-1">
+              <div className="text-sm font-bold leading-tight">{t.title}</div>
+              <div className="text-sm leading-tight opacity-90">{t.description || "No content"}</div>
               <div className="text-[11px] opacity-80 mt-1">
                 {dueStr}; Importance: <span className="font-bold">{importance}</span>
               </div>
             </div>
           ),
           variant: variant,
-          duration: 86400000, // Persistent until manually dismissed
+          duration: 86400000, // Persistent until manually dismissed (24h)
         });
 
         // 2. System Push Notification (PWA)
         if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
-          const systemBody = `${t.description || 'New task assigned'}\n${dueStr}; Importance: ${importance}`;
+          // Line 2: Title; Line 3: Content; Line 4: Deadline & Importance
+          const systemBody = `${t.title}\n${t.description || 'No content'}\n${dueStr}; Importance: ${importance}`;
           
           const notificationOptions: NotificationOptions = {
             body: systemBody,
@@ -128,10 +130,10 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
 
           if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
             navigator.serviceWorker.ready.then(registration => {
-              registration.showNotification(t.title, notificationOptions);
+              registration.showNotification("New task assigned", notificationOptions);
             });
           } else {
-            new Notification(t.title, notificationOptions);
+            new Notification("New task assigned", notificationOptions);
           }
         }
       });
