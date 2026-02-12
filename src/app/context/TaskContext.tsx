@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
@@ -26,7 +27,6 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   
   const [notifiedTaskIds, setNotifiedTaskIds] = useState<Set<string>>(new Set());
-  const isFirstCheckRef = useRef(true);
 
   const refreshTasks = useCallback(async () => {
     try {
@@ -57,19 +57,25 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
-    // Load persisted notified IDs
-    const saved = localStorage.getItem('task_compass_notified_ids');
-    if (saved) {
-      try {
-        setNotifiedTaskIds(new Set(JSON.parse(saved)));
-      } catch (e) {
-        console.error("Error parsing notified IDs", e);
-      }
-    }
-
     const interval = setInterval(refreshTasks, 30000);
     return () => clearInterval(interval);
   }, [refreshTasks]);
+
+  // Load user-specific notified IDs
+  useEffect(() => {
+    if (user) {
+      const saved = localStorage.getItem(`task_compass_notified_ids_${user.uid}`);
+      if (saved) {
+        try {
+          setNotifiedTaskIds(new Set(JSON.parse(saved)));
+        } catch (e) {
+          console.error("Error parsing notified IDs", e);
+        }
+      } else {
+        setNotifiedTaskIds(new Set());
+      }
+    }
+  }, [user]);
 
   // Handle Notifications
   useEffect(() => {
@@ -77,7 +83,6 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
 
     // Filter tasks assigned to me that I haven't been notified about
     const tasksToNotify = allTasks.filter(t => {
-      // Logic for "is assigned to me"
       const isAssignedToMe = t.assignedTo.some(assignee => 
         assignee === user.displayName || 
         assignee === user.email || 
@@ -90,13 +95,12 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
     });
 
     if (tasksToNotify.length > 0) {
-      // Notify for each new task
       tasksToNotify.forEach(t => {
-        if (typeof window !== 'undefined' && Notification.permission === 'granted') {
+        if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
           const dueStr = format(new Date(t.dueDate), 'HH:mm - MMM dd');
-          const bodyText = `Due: ${dueStr}\nPriority: ${t.priority}`;
+          const bodyText = `Task: ${t.title}\nDue: ${dueStr}\nPriority: ${t.priority}`;
           
-          const notificationTitle = `Task Received: ${t.title}`;
+          const notificationTitle = `New task received`;
           const notificationOptions = {
             body: bodyText,
             icon: 'https://picsum.photos/seed/taskicon192/192/192',
@@ -107,12 +111,9 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
             requireInteraction: true
           };
 
-          // Use service worker if available for better reliability
-          if ('serviceWorker' in navigator) {
+          if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
             navigator.serviceWorker.ready.then(registration => {
               registration.showNotification(notificationTitle, notificationOptions);
-            }).catch(() => {
-              new Notification(notificationTitle, { body: bodyText });
             });
           } else {
             new Notification(notificationTitle, { body: bodyText });
@@ -124,7 +125,7 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
       setNotifiedTaskIds(prev => {
         const next = new Set(prev);
         tasksToNotify.forEach(t => next.add(t.id));
-        localStorage.setItem('task_compass_notified_ids', JSON.stringify(Array.from(next)));
+        localStorage.setItem(`task_compass_notified_ids_${user.uid}`, JSON.stringify(Array.from(next)));
         return next;
       });
     }
