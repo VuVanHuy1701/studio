@@ -100,23 +100,24 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
         // Map priority to toast variant
         const variant = t.priority.toLowerCase() as 'low' | 'medium' | 'high';
 
-        // 1. In-app Persistent Toast with color coding
+        // 1. In-app Persistent Toast (Manually dismissed)
         toast({
           title: "New task received",
           description: description,
           variant: variant,
+          // Note: duration is handled by TOAST_REMOVE_DELAY in hook
         });
 
         // 2. System Push Notification (PWA)
         if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
-          const notificationOptions = {
+          const notificationOptions: NotificationOptions = {
             body: description,
             icon: 'https://picsum.photos/seed/taskicon192/192/192',
             badge: 'https://picsum.photos/seed/taskbadge/96/96',
             tag: t.id,
             data: { url: window.location.origin + '/tasks' },
             vibrate: [200, 100, 200],
-            requireInteraction: true // Keeps notification until user dismisses it
+            requireInteraction: true // This keeps the notification visible until user clicks or closes it
           };
 
           if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
@@ -124,7 +125,7 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
               registration.showNotification("New task received", notificationOptions);
             });
           } else {
-            new Notification("New task received", { body: description });
+            new Notification("New task received", notificationOptions);
           }
         }
       });
