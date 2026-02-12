@@ -95,36 +95,43 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
       tasksToNotify.forEach(t => {
         const dueStr = format(new Date(t.dueDate), 'HH:mm - MMM dd');
         const importance = t.priority;
-        const description = `${t.title} - Time: ${dueStr} | Importance: ${importance}`;
-        
         const variant = t.priority.toLowerCase() as 'low' | 'medium' | 'high';
 
         // 1. In-app Persistent Toast (Manually dismissed)
         toast({
-          title: "New task received",
-          description: description,
+          title: t.title, // Line 1: Task title (bold)
+          description: (
+            <div className="flex flex-col gap-0.5 mt-1">
+              <div className="text-sm leading-tight">{t.description || "No content"}</div> // Line 2: Task content
+              <div className="text-[11px] opacity-80 mt-1">
+                {dueStr}; Importance: <span className="font-bold">{importance}</span> // Line 3: Task deadline; Importance (bold)
+              </div>
+            </div>
+          ),
           variant: variant,
-          duration: 86400000, // Set to 24 hours to ensure it doesn't auto-dismiss
+          duration: 86400000, // Persistent until manually dismissed
         });
 
         // 2. System Push Notification (PWA)
         if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+          const systemBody = `${t.description || 'New task assigned'}\n${dueStr}; Importance: ${importance}`;
+          
           const notificationOptions: NotificationOptions = {
-            body: description,
+            body: systemBody,
             icon: 'https://picsum.photos/seed/taskicon192/192/192',
             badge: 'https://picsum.photos/seed/taskbadge/96/96',
             tag: t.id,
             data: { url: window.location.origin + '/tasks' },
             vibrate: [200, 100, 200],
-            requireInteraction: true // Keeps the notification visible until user clicks or closes it
+            requireInteraction: true 
           };
 
           if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
             navigator.serviceWorker.ready.then(registration => {
-              registration.showNotification("New task received", notificationOptions);
+              registration.showNotification(t.title, notificationOptions);
             });
           } else {
-            new Notification("New task received", notificationOptions);
+            new Notification(t.title, notificationOptions);
           }
         }
       });
