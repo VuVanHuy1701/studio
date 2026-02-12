@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
@@ -27,7 +26,7 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   
   const [notifiedTaskIds, setNotifiedTaskIds] = useState<Set<string>>(new Set());
-  const initialLoadRef = useRef(true);
+  const isFirstCheckRef = useRef(true);
 
   const refreshTasks = useCallback(async () => {
     try {
@@ -51,12 +50,14 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     refreshTasks();
     
+    // Request permission on mount
     if (typeof window !== 'undefined' && 'Notification' in window) {
       if (Notification.permission === 'default') {
         Notification.requestPermission();
       }
     }
 
+    // Load persisted notified IDs
     const saved = localStorage.getItem('task_compass_notified_ids');
     if (saved) {
       try {
@@ -70,19 +71,13 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
     return () => clearInterval(interval);
   }, [refreshTasks]);
 
+  // Handle Notifications
   useEffect(() => {
     if (!isHydrated || !user || allTasks.length === 0) return;
 
-    if (initialLoadRef.current) {
-      const currentIds = allTasks.map(t => t.id);
-      const newNotified = new Set([...Array.from(notifiedTaskIds), ...currentIds]);
-      setNotifiedTaskIds(newNotified);
-      localStorage.setItem('task_compass_notified_ids', JSON.stringify(Array.from(newNotified)));
-      initialLoadRef.current = false;
-      return;
-    }
-
+    // Filter tasks assigned to me that I haven't been notified about
     const tasksToNotify = allTasks.filter(t => {
+      // Logic for "is assigned to me"
       const isAssignedToMe = t.assignedTo.some(assignee => 
         assignee === user.displayName || 
         assignee === user.email || 
@@ -95,30 +90,37 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
     });
 
     if (tasksToNotify.length > 0) {
+      // Notify for each new task
       tasksToNotify.forEach(t => {
         if (typeof window !== 'undefined' && Notification.permission === 'granted') {
-          const bodyText = `Due: ${format(new Date(t.dueDate), 'HH:mm - MMM dd')}\nPriority: ${t.priority}`;
+          const dueStr = format(new Date(t.dueDate), 'HH:mm - MMM dd');
+          const bodyText = `Due: ${dueStr}\nPriority: ${t.priority}`;
           
+          const notificationTitle = `Task Received: ${t.title}`;
+          const notificationOptions = {
+            body: bodyText,
+            icon: 'https://picsum.photos/seed/taskicon192/192/192',
+            badge: 'https://picsum.photos/seed/taskbadge/96/96',
+            tag: t.id,
+            data: { url: window.location.origin + '/tasks' },
+            vibrate: [200, 100, 200],
+            requireInteraction: true
+          };
+
+          // Use service worker if available for better reliability
           if ('serviceWorker' in navigator) {
             navigator.serviceWorker.ready.then(registration => {
-              registration.showNotification(`Task Received: ${t.title}`, {
-                body: bodyText,
-                icon: 'https://picsum.photos/seed/taskicon192/192/192',
-                badge: 'https://picsum.photos/seed/taskbadge/96/96',
-                tag: t.id,
-                data: { url: window.location.origin + '/tasks' },
-                vibrate: [100, 50, 100],
-                requireInteraction: true
-              });
-            }).catch(err => {
-              new Notification(`Task Received: ${t.title}`, { body: bodyText });
+              registration.showNotification(notificationTitle, notificationOptions);
+            }).catch(() => {
+              new Notification(notificationTitle, { body: bodyText });
             });
           } else {
-            new Notification(`Task Received: ${t.title}`, { body: bodyText });
+            new Notification(notificationTitle, { body: bodyText });
           }
         }
       });
 
+      // Update state and persistence
       setNotifiedTaskIds(prev => {
         const next = new Set(prev);
         tasksToNotify.forEach(t => next.add(t.id));
