@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
@@ -52,7 +51,6 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     refreshTasks();
     
-    // Request notification permission
     if (typeof window !== 'undefined' && 'Notification' in window) {
       if (Notification.permission === 'default') {
         Notification.requestPermission();
@@ -63,7 +61,6 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
     return () => clearInterval(interval);
   }, [refreshTasks]);
 
-  // Load user-specific notified IDs
   useEffect(() => {
     if (user) {
       const saved = localStorage.getItem(`task_compass_notified_ids_${user.uid}`);
@@ -79,11 +76,9 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
     }
   }, [user]);
 
-  // Handle Notifications
   useEffect(() => {
     if (!isHydrated || !user || allTasks.length === 0) return;
 
-    // Filter tasks assigned to me that I haven't been notified about
     const tasksToNotify = allTasks.filter(t => {
       const isAssignedToMe = t.assignedTo.some(assignee => 
         assignee === user.displayName || 
@@ -99,24 +94,29 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
     if (tasksToNotify.length > 0) {
       tasksToNotify.forEach(t => {
         const dueStr = format(new Date(t.dueDate), 'HH:mm - MMM dd');
-        const bodyText = `Time: ${dueStr} | Importance: ${t.priority}`;
+        const importance = t.priority;
+        const description = `${t.title} - Time: ${dueStr} | Importance: ${importance}`;
         
-        // 1. In-app Toast (On screen notification)
+        // Map priority to toast variant
+        const variant = t.priority.toLowerCase() as 'low' | 'medium' | 'high';
+
+        // 1. In-app Persistent Toast with color coding
         toast({
           title: "New task received",
-          description: `${t.title} - ${bodyText}`,
+          description: description,
+          variant: variant,
         });
 
         // 2. System Push Notification (PWA)
         if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
           const notificationOptions = {
-            body: `${t.title}\n${bodyText}`,
+            body: description,
             icon: 'https://picsum.photos/seed/taskicon192/192/192',
             badge: 'https://picsum.photos/seed/taskbadge/96/96',
             tag: t.id,
             data: { url: window.location.origin + '/tasks' },
             vibrate: [200, 100, 200],
-            requireInteraction: true
+            requireInteraction: true // Keeps notification until user dismisses it
           };
 
           if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
@@ -124,12 +124,11 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
               registration.showNotification("New task received", notificationOptions);
             });
           } else {
-            new Notification("New task received", { body: `${t.title}\n${bodyText}` });
+            new Notification("New task received", { body: description });
           }
         }
       });
 
-      // Update state and persistence
       setNotifiedTaskIds(prev => {
         const next = new Set(prev);
         tasksToNotify.forEach(t => next.add(t.id));
