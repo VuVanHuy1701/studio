@@ -38,15 +38,16 @@
       "description": "thử lần 1",
       "category": "Work",
       "dueDate": "2026-02-10T09:30:00.000Z",
-      "completed": false,
+      "completed": true,
       "priority": "Medium",
       "assignedTo": [
         "Test"
       ],
       "createdBy": "user-ri1bptvab",
       "additionalTimeAllocated": false,
-      "progress": 21,
-      "id": "k8yr2as"
+      "progress": 100,
+      "id": "k8yr2as",
+      "completedAt": "2026-02-12T03:21:18.137Z"
     },
     {
       "title": "test multiple device",
@@ -132,15 +133,17 @@
       "description": "lần 5",
       "category": "Work",
       "dueDate": "2026-02-11T09:30:00.000Z",
-      "completed": false,
+      "completed": true,
       "priority": "High",
       "assignedTo": [
         "Test"
       ],
       "createdBy": "admin-id",
       "additionalTimeAllocated": false,
-      "progress": 0,
-      "id": "paoxr44"
+      "progress": 100,
+      "id": "paoxr44",
+      "notes": "hiệu chỉnh van",
+      "completedAt": "2026-02-12T03:20:42.952Z"
     },
     {
       "title": "thông báo đẩy",
@@ -162,15 +165,17 @@
       "description": "lần 7",
       "category": "Work",
       "dueDate": "2026-02-12T09:30:00.000Z",
-      "completed": false,
+      "completed": true,
       "priority": "High",
       "assignedTo": [
         "Test"
       ],
       "createdBy": "admin-id",
       "additionalTimeAllocated": true,
-      "progress": 0,
-      "id": "n2jm1ic"
+      "progress": 100,
+      "id": "n2jm1ic",
+      "notes": "lần 7 oke",
+      "completedAt": "2026-02-12T03:21:38.509Z"
     },
     {
       "title": "thông báo đẩy",
