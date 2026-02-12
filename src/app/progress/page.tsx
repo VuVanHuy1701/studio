@@ -40,7 +40,6 @@ function ProgressContent() {
     setMounted(true);
   }, []);
 
-  // Use a state for stats to ensure consistency between server and client
   const [dailyStats, setDailyStats] = useState<any[]>([]);
   const [monthlyStats, setMonthlyStats] = useState<any[]>([]);
 
@@ -49,7 +48,7 @@ function ProgressContent() {
       const generateStats = (days: number) => {
         return Array.from({ length: days }).map((_, i) => {
           const date = subDays(new Date(), days - 1 - i);
-          const dayTasks = tasks.filter(t => isSameDay(t.dueDate, date));
+          const dayTasks = tasks.filter(t => isSameDay(new Date(t.dueDate), date));
           return {
             date: format(date, 'MMM dd'),
             completed: dayTasks.filter(t => t.completed).length,
@@ -90,15 +89,15 @@ function ProgressContent() {
                   <CardTitle className="text-xl font-bold">{t('dailyCompletion')}</CardTitle>
                   <CardDescription>Number of tasks completed over the last 7 days</CardDescription>
                 </CardHeader>
-                <CardContent className="h-[350px] p-6">
-                  <ChartContainer config={chartConfig}>
+                <CardContent className="h-[400px] p-6 pt-2">
+                  <ChartContainer config={chartConfig} className="aspect-auto h-full w-full">
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={dailyStats}>
+                      <BarChart data={dailyStats} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--muted))" opacity={0.4} />
-                        <XAxis dataKey="date" tick={{ fontWeight: 600 }} axisLine={false} tickLine={false} />
-                        <YAxis axisLine={false} tickLine={false} tick={{ fontWeight: 600 }} />
+                        <XAxis dataKey="date" tick={{ fontWeight: 600, fontSize: 12 }} axisLine={false} tickLine={false} dy={10} />
+                        <YAxis axisLine={false} tickLine={false} tick={{ fontWeight: 600, fontSize: 12 }} />
                         <Tooltip content={<ChartTooltipContent />} />
-                        <Bar dataKey="completed" fill="var(--color-completed)" radius={[6, 6, 0, 0]} barSize={40} />
+                        <Bar dataKey="completed" fill="var(--color-completed)" radius={[6, 6, 0, 0]} barSize={45} />
                       </BarChart>
                     </ResponsiveContainer>
                   </ChartContainer>
@@ -138,13 +137,20 @@ function ProgressContent() {
                   <CardTitle className="text-xl font-bold">{t('completionTrend')}</CardTitle>
                   <CardDescription>Visualizing your productivity over the last 30 days</CardDescription>
                 </CardHeader>
-                <CardContent className="h-[350px] p-6">
-                  <ChartContainer config={chartConfig}>
+                <CardContent className="h-[400px] p-6 pt-2">
+                  <ChartContainer config={chartConfig} className="aspect-auto h-full w-full">
                     <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={monthlyStats}>
+                      <LineChart data={monthlyStats} margin={{ top: 10, right: 20, left: -20, bottom: 0 }}>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--muted))" opacity={0.4} />
-                        <XAxis dataKey="date" hide />
-                        <YAxis axisLine={false} tickLine={false} tick={{ fontWeight: 600 }} />
+                        <XAxis 
+                          dataKey="date" 
+                          tick={{ fontWeight: 600, fontSize: 10 }} 
+                          axisLine={false} 
+                          tickLine={false} 
+                          interval={4}
+                          dy={10}
+                        />
+                        <YAxis axisLine={false} tickLine={false} tick={{ fontWeight: 600, fontSize: 12 }} />
                         <Tooltip content={<ChartTooltipContent />} />
                         <Line 
                           type="monotone" 
@@ -179,7 +185,7 @@ function ProgressContent() {
                     </li>
                     <li className="space-y-1">
                       <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Peak performance date</p>
-                      <p className="text-2xl font-bold text-accent">{monthlyStats.sort((a,b) => b.completed - a.completed)[0]?.date || '...'}</p>
+                      <p className="text-2xl font-bold text-accent">{monthlyStats.length > 0 ? [...monthlyStats].sort((a,b) => b.completed - a.completed)[0]?.date : '...'}</p>
                     </li>
                   </ul>
                 </CardContent>
