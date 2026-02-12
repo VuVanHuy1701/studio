@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
@@ -82,11 +81,9 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
     }
   }, [user]);
 
-  // Combined Notification Logic
   useEffect(() => {
     if (!isHydrated || !user || allTasks.length === 0) return;
 
-    // 1. New Task Notifications (For assigned users)
     const newTasksToNotify = allTasks.filter(t => {
       const isAssignedToMe = t.assignedTo.some(assignee => 
         assignee === user.displayName || 
@@ -121,8 +118,8 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
         });
 
         if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
-          const systemBody = `${t.title}\n${t.description || 'No content'}\n${dueStr}; Importance: ${importance}`;
-          new Notification("New task assigned", {
+          const systemBody = `New task assigned\n${t.title}\n${t.description || 'No content'}\n${dueStr}; Importance: ${importance}`;
+          new Notification("Task Assignment", {
             body: systemBody,
             icon: 'https://picsum.photos/seed/taskicon/192/192',
             requireInteraction: true 
@@ -138,13 +135,13 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
       });
     }
 
-    // 2. Task Completion Notifications (For Administrators)
     if (user.role === 'admin') {
       const completedTasksToNotify = allTasks.filter(t => 
         t.completed && 
         !notifiedCompletedIds.has(t.id) && 
         t.completedBy && 
-        t.completedBy !== user.displayName // Don't notify admin if they completed it themselves
+        t.completedBy !== user.displayName &&
+        (t.createdBy === 'admin-id' || t.createdBy === 'admin')
       );
 
       if (completedTasksToNotify.length > 0) {
@@ -167,8 +164,8 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
           });
 
           if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
-            const systemBody = `${t.title}\n${t.description || 'No description'}\nFinished: ${compTimeStr}\nNotes: ${t.notes || 'None'}\nBy: ${t.completedBy}`;
-            new Notification("Task completed", {
+            const systemBody = `Task completed\n${t.title}\n${t.description || 'No description'}\nFinished: ${compTimeStr}\nNotes: ${t.notes || 'None'}\nBy: ${t.completedBy}`;
+            new Notification("Task Status Update", {
               body: systemBody,
               icon: 'https://picsum.photos/seed/taskdone/192/192',
               requireInteraction: true 

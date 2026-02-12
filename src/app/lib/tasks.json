@@ -31,7 +31,7 @@
       "additionalTimeAllocated": true,
       "progress": 35,
       "id": "kwe2364",
-      "notes": "thử tiến trình trên cái này.\nchia việc oke\nthêm user oke\nquản lý user oke\n+ đang test multiple: 50%\n+ test PWA: chưa làm \n+ thêm thông báo đẩy: đang làm\n"
+      "notes": "thử tiến trình trên cái này.\nchia việc oke\nthêm user oke\nquản lý user oke\n+ đang test multiple: 50%\n+ test PWA: chưa làm \n+ thêm thông báo đẩy: Hoành thành\n"
     },
     {
       "title": "thử tạo task trên test",
@@ -150,15 +150,17 @@
       "description": "lần 6",
       "category": "Work",
       "dueDate": "2026-02-12T09:30:00.000Z",
-      "completed": false,
+      "completed": true,
       "priority": "Medium",
       "assignedTo": [
         "Test"
       ],
       "createdBy": "admin-id",
       "additionalTimeAllocated": true,
-      "progress": 0,
-      "id": "254artw"
+      "progress": 100,
+      "id": "254artw",
+      "completedAt": "2026-02-12T06:21:09.696Z",
+      "completedBy": "System Administrator"
     },
     {
       "title": "thông báo đẩy",
@@ -182,315 +184,380 @@
       "description": "lần 8",
       "category": "Work",
       "dueDate": "2026-02-12T09:30:00.000Z",
-      "completed": false,
+      "completed": true,
       "priority": "High",
       "assignedTo": [
         "Test"
       ],
       "createdBy": "admin-id",
       "additionalTimeAllocated": true,
-      "progress": 0,
-      "id": "h597fqy"
+      "progress": 100,
+      "id": "h597fqy",
+      "completedAt": "2026-02-12T06:21:12.125Z",
+      "completedBy": "System Administrator"
     },
     {
       "title": "thông báo đẩy",
       "description": "lần 9",
       "category": "Work",
       "dueDate": "2026-02-12T09:30:00.000Z",
-      "completed": false,
+      "completed": true,
       "priority": "Medium",
       "assignedTo": [
         "Test"
       ],
       "createdBy": "admin-id",
       "additionalTimeAllocated": true,
-      "progress": 4,
-      "id": "oqcbc73"
+      "progress": 100,
+      "id": "oqcbc73",
+      "completedAt": "2026-02-12T06:21:07.683Z",
+      "completedBy": "System Administrator"
     },
     {
       "title": "thông báo đẩy",
       "description": "lần 10",
       "category": "Work",
       "dueDate": "2026-02-12T09:30:00.000Z",
-      "completed": false,
+      "completed": true,
       "priority": "Medium",
       "assignedTo": [
         "Test"
       ],
       "createdBy": "admin-id",
       "additionalTimeAllocated": true,
-      "progress": 0,
-      "id": "i4infom"
+      "progress": 100,
+      "id": "i4infom",
+      "completedAt": "2026-02-12T06:21:06.460Z",
+      "completedBy": "System Administrator"
     },
     {
       "title": "thông báo đẩy",
       "description": "lần 11",
       "category": "Work",
       "dueDate": "2026-02-12T09:30:00.000Z",
-      "completed": false,
+      "completed": true,
       "priority": "Medium",
       "assignedTo": [
         "Test"
       ],
       "createdBy": "admin-id",
       "additionalTimeAllocated": false,
-      "progress": 0,
-      "id": "77sn773"
+      "progress": 100,
+      "id": "77sn773",
+      "completedAt": "2026-02-12T06:21:03.332Z",
+      "completedBy": "System Administrator"
     },
     {
       "title": "thông báo đẩy",
       "description": "lần 12",
       "category": "Work",
       "dueDate": "2026-02-12T09:30:00.000Z",
-      "completed": false,
+      "completed": true,
       "priority": "Medium",
       "assignedTo": [
         "Test"
       ],
       "createdBy": "admin-id",
       "additionalTimeAllocated": false,
-      "progress": 0,
-      "id": "xfft5a7"
+      "progress": 100,
+      "id": "xfft5a7",
+      "completedAt": "2026-02-12T06:20:58.382Z",
+      "completedBy": "System Administrator"
     },
     {
       "title": "thông báo đẩy",
       "description": "lần 13",
       "category": "Work",
       "dueDate": "2026-02-12T09:30:00.000Z",
-      "completed": false,
+      "completed": true,
       "priority": "Medium",
       "assignedTo": [
         "Test"
       ],
       "createdBy": "admin-id",
       "additionalTimeAllocated": true,
-      "progress": 0,
-      "id": "lfbb0rq"
+      "progress": 100,
+      "id": "lfbb0rq",
+      "completedAt": "2026-02-12T06:20:55.658Z",
+      "completedBy": "System Administrator"
     },
     {
       "title": "thông báo đẩy",
       "description": "lần 14",
       "category": "Work",
       "dueDate": "2026-02-12T09:30:00.000Z",
-      "completed": false,
+      "completed": true,
       "priority": "Medium",
       "assignedTo": [
         "Test"
       ],
       "createdBy": "admin-id",
       "additionalTimeAllocated": false,
-      "progress": 0,
-      "id": "2v7oacp"
+      "progress": 100,
+      "id": "2v7oacp",
+      "notes": "Đã hoàn thành",
+      "completedAt": "2026-02-12T06:20:08.959Z",
+      "completedBy": "Test"
     },
     {
       "title": "thông báo đẩy",
       "description": "lần 15",
       "category": "Work",
       "dueDate": "2026-02-12T09:30:00.000Z",
-      "completed": false,
+      "completed": true,
       "priority": "Medium",
       "assignedTo": [
         "Test"
       ],
       "createdBy": "admin-id",
       "additionalTimeAllocated": false,
-      "progress": 0,
-      "id": "yx78gfq"
+      "progress": 100,
+      "id": "yx78gfq",
+      "notes": "Đã hoàn thành",
+      "completedAt": "2026-02-12T06:17:54.562Z",
+      "completedBy": "Test"
     },
     {
       "title": "giữ thông báo đẩy",
       "description": "lần 1",
       "category": "Work",
       "dueDate": "2026-02-12T09:30:00.000Z",
-      "completed": false,
+      "completed": true,
       "priority": "Medium",
       "assignedTo": [
         "Test"
       ],
       "createdBy": "user-ri1bptvab",
       "additionalTimeAllocated": false,
-      "progress": 0,
-      "id": "r88gxn1"
+      "progress": 100,
+      "id": "r88gxn1",
+      "completedAt": "2026-02-12T06:21:27.106Z",
+      "completedBy": "Test"
     },
     {
       "title": "giữ thông báo đẩy",
       "description": "lần 2",
       "category": "Work",
       "dueDate": "2026-02-12T09:30:00.000Z",
-      "completed": false,
+      "completed": true,
       "priority": "Medium",
       "assignedTo": [
         "Test"
       ],
       "createdBy": "user-ri1bptvab",
       "additionalTimeAllocated": false,
-      "progress": 0,
-      "id": "t6t26ga"
+      "progress": 100,
+      "id": "t6t26ga",
+      "completedAt": "2026-02-12T06:21:31.996Z",
+      "completedBy": "Test"
     },
     {
       "title": "giữ thông báo đẩy",
       "description": "lần 3",
       "category": "Work",
       "dueDate": "2026-02-12T09:30:00.000Z",
-      "completed": false,
+      "completed": true,
       "priority": "Medium",
       "assignedTo": [
         "Test"
       ],
       "createdBy": "user-ri1bptvab",
       "additionalTimeAllocated": false,
-      "progress": 0,
-      "id": "rx5nd08"
+      "progress": 100,
+      "id": "rx5nd08",
+      "completedAt": "2026-02-12T06:21:28.293Z",
+      "completedBy": "Test"
     },
     {
       "title": "giữ thông báo đẩy",
       "description": "lần 4",
       "category": "Work",
       "dueDate": "2026-02-12T09:30:00.000Z",
-      "completed": false,
+      "completed": true,
       "priority": "Medium",
       "assignedTo": [
         "Test"
       ],
       "createdBy": "user-ri1bptvab",
       "additionalTimeAllocated": false,
-      "progress": 0,
-      "id": "8s8rqcz"
+      "progress": 100,
+      "id": "8s8rqcz",
+      "completedAt": "2026-02-12T06:21:33.156Z",
+      "completedBy": "Test"
     },
     {
       "title": "giữ thông báo đẩy",
       "description": "lần 5",
       "category": "Work",
       "dueDate": "2026-02-12T09:30:00.000Z",
-      "completed": false,
+      "completed": true,
       "priority": "Medium",
       "assignedTo": [
         "Test"
       ],
       "createdBy": "admin-id",
       "additionalTimeAllocated": false,
-      "progress": 0,
-      "id": "2ir3l96"
+      "progress": 100,
+      "id": "2ir3l96",
+      "notes": "Đã hoàn thành",
+      "completedAt": "2026-02-12T06:17:26.550Z",
+      "completedBy": "Test"
     },
     {
       "title": "giữ thông báo đẩy",
       "description": "lần 6",
       "category": "Work",
       "dueDate": "2026-02-12T09:30:00.000Z",
-      "completed": false,
+      "completed": true,
       "priority": "Medium",
       "assignedTo": [
         "Test"
       ],
       "createdBy": "user-ri1bptvab",
       "additionalTimeAllocated": false,
-      "progress": 0,
-      "id": "oi2jrkk"
+      "progress": 100,
+      "id": "oi2jrkk",
+      "completedAt": "2026-02-12T06:21:33.961Z",
+      "completedBy": "Test"
     },
     {
       "title": "giữ thông báo đẩy",
       "description": "lần 7",
       "category": "Work",
       "dueDate": "2026-02-12T09:30:00.000Z",
-      "completed": false,
+      "completed": true,
       "priority": "Medium",
       "assignedTo": [
         "Test"
       ],
       "createdBy": "admin-id",
       "additionalTimeAllocated": false,
-      "progress": 0,
-      "id": "tjynl1j"
+      "progress": 100,
+      "id": "tjynl1j",
+      "notes": "Đã hoàn thành",
+      "completedAt": "2026-02-12T06:17:20.480Z",
+      "completedBy": "Test"
     },
     {
       "title": "giữ thông báo đẩy",
       "description": "lần 8",
       "category": "Work",
       "dueDate": "2026-02-12T09:30:00.000Z",
-      "completed": false,
+      "completed": true,
       "priority": "Medium",
       "assignedTo": [
         "Me"
       ],
       "createdBy": "admin-id",
       "additionalTimeAllocated": false,
-      "progress": 0,
-      "id": "l3f2ksn"
+      "progress": 100,
+      "id": "l3f2ksn",
+      "completedAt": "2026-02-12T06:20:54.051Z",
+      "completedBy": "System Administrator"
     },
     {
       "title": "giữ thông báo đẩy",
       "description": "lần 9",
       "category": "Work",
       "dueDate": "2026-02-12T09:30:00.000Z",
-      "completed": false,
+      "completed": true,
       "priority": "Medium",
       "assignedTo": [
         "Test"
       ],
       "createdBy": "admin-id",
       "additionalTimeAllocated": false,
-      "progress": 0,
-      "id": "0ifpuql"
+      "progress": 100,
+      "id": "0ifpuql",
+      "notes": "đã hoàn thành",
+      "completedAt": "2026-02-12T06:16:44.106Z",
+      "completedBy": "Test"
     },
     {
       "title": "giữ thông báo đẩy",
       "description": "lần N",
       "category": "Work",
       "dueDate": "2026-02-12T09:30:00.000Z",
-      "completed": false,
+      "completed": true,
       "priority": "Medium",
       "assignedTo": [
         "Me"
       ],
       "createdBy": "admin-id",
       "additionalTimeAllocated": false,
-      "progress": 0,
-      "id": "8tceqgt"
+      "progress": 100,
+      "id": "8tceqgt",
+      "completedAt": "2026-02-12T06:20:49.631Z",
+      "completedBy": "System Administrator"
     },
     {
       "title": "Giữ thông báo",
       "description": "lần N",
       "category": "Work",
       "dueDate": "2026-02-12T09:30:00.000Z",
-      "completed": false,
+      "completed": true,
       "priority": "Medium",
       "assignedTo": [
         "Me"
       ],
       "createdBy": "admin-id",
       "additionalTimeAllocated": false,
-      "progress": 0,
-      "id": "sydot0i"
+      "progress": 100,
+      "id": "sydot0i",
+      "completedAt": "2026-02-12T06:20:48.413Z",
+      "completedBy": "System Administrator"
     },
     {
       "title": "giữ",
       "description": "Lần N",
       "category": "Work",
       "dueDate": "2026-02-12T09:30:00.000Z",
-      "completed": false,
+      "completed": true,
       "priority": "Medium",
       "assignedTo": [
         "Me"
       ],
       "createdBy": "admin-id",
       "additionalTimeAllocated": false,
-      "progress": 0,
-      "id": "4o45lwo"
+      "progress": 100,
+      "id": "4o45lwo",
+      "completedAt": "2026-02-12T06:20:47.011Z",
+      "completedBy": "System Administrator"
     },
     {
       "title": "giữ ",
       "description": "lần N",
       "category": "Work",
       "dueDate": "2026-02-12T09:30:00.000Z",
-      "completed": false,
+      "completed": true,
       "priority": "Medium",
       "assignedTo": [
         "Me"
       ],
       "createdBy": "admin-id",
       "additionalTimeAllocated": false,
-      "progress": 0,
-      "id": "wdkise4"
+      "progress": 100,
+      "id": "wdkise4",
+      "completedAt": "2026-02-12T06:20:45.645Z",
+      "completedBy": "System Administrator"
+    },
+    {
+      "title": "test thông báo nhiệm vụ được giao",
+      "description": "lần 1",
+      "category": "Work",
+      "dueDate": "2026-02-12T09:30:00.000Z",
+      "completed": true,
+      "priority": "Medium",
+      "assignedTo": [
+        "Test"
+      ],
+      "createdBy": "admin-id",
+      "additionalTimeAllocated": false,
+      "progress": 100,
+      "id": "zrjn20q",
+      "notes": "hoàn thành nhiệm vụ",
+      "completedAt": "2026-02-12T06:07:18.844Z",
+      "completedBy": "Test"
     }
   ]
 }
