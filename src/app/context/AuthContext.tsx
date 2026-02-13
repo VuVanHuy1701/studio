@@ -3,13 +3,11 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { 
   signInWithPopup, 
-  signOut, 
-  onAuthStateChanged 
+  signOut 
 } from 'firebase/auth';
 import { auth, googleProvider } from '@/lib/firebase';
 import { AppUser, UserAccount, UserRole } from '@/app/lib/types';
-import initialUsers from '@/app/lib/users.json';
-import { persistUsersToFile } from '@/app/actions/user-actions';
+import { persistUsersToFile, getUsersFromFile } from '@/app/actions/user-actions';
 
 interface AuthContextType {
   user: AppUser | null;
@@ -17,7 +15,6 @@ interface AuthContextType {
   loginWithGoogle: () => Promise<void>;
   loginWithCredentials: (username: string, password: string) => Promise<boolean>;
   logout: () => Promise<void>;
-  // User Management
   managedUsers: UserAccount[];
   addUser: (account: Omit<UserAccount, 'uid'>) => void;
   updateUser: (uid: string, updates: Partial<UserAccount>) => void;
@@ -32,37 +29,50 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [managedUsers, setManagedUsers] = useState<UserAccount[]>([]);
   const [isHydrated, setIsHydrated] = useState(false);
 
-  // Load managed users from LocalStorage or seed from JSON
+  // Load managed users from Server/LocalStorage
   useEffect(() => {
-    const savedUsers = localStorage.getItem('task_compass_users');
-    if (savedUsers) {
-      try {
-        setManagedUsers(JSON.parse(savedUsers));
-      } catch (e) {
-        console.error("Failed to parse managed users", e);
-        setManagedUsers(initialUsers.accounts as UserAccount[]);
+    const initializeAuth = async () => {
+      let users: UserAccount[] = [];
+      
+      // 1. Try local storage first for immediate feel
+      const savedUsers = localStorage.getItem('task_compass_users');
+      if (savedUsers) {
+        try {
+          users = JSON.parse(savedUsers);
+        } catch (e) {
+          console.error("Failed to parse local users", e);
+        }
       }
-    } else {
-      setManagedUsers(initialUsers.accounts as UserAccount[]);
-    }
-    
-    // Auth state from LocalStorage session
-    const savedSession = localStorage.getItem('task_compass_session');
-    if (savedSession) {
-      setUser(JSON.parse(savedSession));
-    }
 
-    setIsHydrated(true);
-    setLoading(false);
+      // 2. Sync with server-side truth
+      try {
+        const serverUsers = await getUsersFromFile();
+        if (serverUsers.length > 0) {
+          users = serverUsers;
+        }
+      } catch (e) {
+        console.warn("Failed to fetch users from server", e);
+      }
+
+      setManagedUsers(users);
+      
+      // Auth state from LocalStorage session
+      const savedSession = localStorage.getItem('task_compass_session');
+      if (savedSession) {
+        setUser(JSON.parse(savedSession));
+      }
+
+      setIsHydrated(true);
+      setLoading(false);
+    };
+
+    initializeAuth();
   }, []);
 
-  // Persist managed users to LocalStorage and System JSON
+  // Persist managed users
   useEffect(() => {
     if (isHydrated) {
-      // 1. Update local storage for immediate persistence in browser
       localStorage.setItem('task_compass_users', JSON.stringify(managedUsers));
-      
-      // 2. Sync with the server-side JSON file
       persistUsersToFile(managedUsers).catch(err => {
         console.warn('System file sync skipped or failed:', err);
       });
@@ -90,7 +100,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const account = managedUsers.find(u => u.username === username && u.password === password);
     if (account) {
       const { password: _, ...safeUser } = account;
-      setUser(safeUser);
+      setUser(safeUser as AppUser);
       localStorage.setItem('task_compass_session', JSON.stringify(safeUser));
       return true;
     }
@@ -107,7 +117,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Admin Actions
   const addUser = (account: Omit<UserAccount, 'uid'>) => {
     const newAccount = { ...account, uid: `user-${Math.random().toString(36).substr(2, 9)}` };
     setManagedUsers(prev => [...prev, newAccount]);
@@ -115,7 +124,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const updateUser = (uid: string, updates: Partial<UserAccount>) => {
     setManagedUsers(prev => prev.map(u => u.uid === uid ? { ...u, ...updates } : u));
-    // Update current session if the user edited themselves
     if (user?.uid === uid) {
       const updatedUser = { ...user, ...updates };
       delete (updatedUser as any).password;
@@ -125,7 +133,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const deleteUser = (uid: string) => {
-    if (uid === 'admin-id') return; // Protect system admin
+    if (uid === 'admin-id') return;
     setManagedUsers(prev => prev.filter(u => u.uid !== uid));
     if (user?.uid === uid) logout();
   };
