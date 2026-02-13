@@ -42,6 +42,15 @@
       "role": "user",
       "photoURL": null,
       "uid": "user-ri1bptvab"
+    },
+    {
+      "username": "test2",
+      "password": "123",
+      "displayName": "Test_2",
+      "email": "test2@example.com",
+      "role": "user",
+      "photoURL": null,
+      "uid": "user-5x5xh56co"
     }
   ]
 }

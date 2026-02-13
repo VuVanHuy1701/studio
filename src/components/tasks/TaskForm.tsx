@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
@@ -11,13 +12,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
-import { Plus, UserPlus, Save, Search, User, Check, X, Calendar as CalendarIcon, Clock, Percent } from 'lucide-react';
+import { Plus, UserPlus, Save, Search, User, Check, X, Calendar as CalendarIcon, Clock, Percent, Sparkles, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useSettings } from '@/app/context/SettingsContext';
 import { useAuth } from '@/app/context/AuthContext';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
+import { suggestTaskDetails } from '@/ai/flows/suggest-task-flow';
 
 interface TaskFormProps {
   taskToEdit?: Task;
@@ -44,6 +46,7 @@ export function TaskForm({ taskToEdit, open: externalOpen, onOpenChange: setExte
   const [userSearch, setUserSearch] = useState('');
   const [additionalTimeAllocated, setAdditionalTimeAllocated] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [isAiLoading, setIsAiLoading] = useState(false);
 
   const filteredUsers = useMemo(() => {
     const search = userSearch.toLowerCase().trim();
@@ -75,6 +78,20 @@ export function TaskForm({ taskToEdit, open: externalOpen, onOpenChange: setExte
       setDescription('');
     }
   }, [taskToEdit, open, user]);
+
+  const handleAiSuggest = async () => {
+    if (!title) return;
+    setIsAiLoading(true);
+    try {
+      const result = await suggestTaskDetails({ title, category });
+      setDescription(result.description);
+      setPriority(result.suggestedPriority as any);
+    } catch (error) {
+      console.error("AI Suggest failed", error);
+    } finally {
+      setIsAiLoading(false);
+    }
+  };
 
   const toggleUserSelection = (userName: string) => {
     setAssignedUsers(prev => 
@@ -148,7 +165,20 @@ export function TaskForm({ taskToEdit, open: externalOpen, onOpenChange: setExte
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-3 pt-2">
           <div className="space-y-1.5">
-            <Label htmlFor="title" className="text-xs font-bold uppercase text-muted-foreground">{t('taskTitle')}</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="title" className="text-xs font-bold uppercase text-muted-foreground">{t('taskTitle')}</Label>
+              <Button 
+                type="button" 
+                variant="ghost" 
+                size="sm" 
+                className="h-6 text-[10px] font-bold gap-1 text-primary hover:text-primary hover:bg-primary/5"
+                disabled={!title || isAiLoading}
+                onClick={handleAiSuggest}
+              >
+                {isAiLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+                AI Suggest
+              </Button>
+            </div>
             <Input 
               id="title" 
               placeholder={t('titlePlaceholder')} 

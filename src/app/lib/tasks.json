@@ -630,6 +630,25 @@
       "notes": "xongg",
       "completedAt": "2026-02-13T06:23:04.424Z",
       "completedBy": "Test"
+    },
+    {
+      "title": "test 2 nhận việc",
+      "description": "thử việc test 2",
+      "category": "Work",
+      "dueDate": "2026-02-13T09:30:00.000Z",
+      "completed": true,
+      "priority": "Medium",
+      "assignedTo": [
+        "Test_2"
+      ],
+      "createdBy": "admin-id",
+      "additionalTimeAllocated": true,
+      "progress": 100,
+      "id": "0tzqof9",
+      "createdAt": "2026-02-13T07:28:22.674Z",
+      "notes": "đã hoàn thành",
+      "completedAt": "2026-02-13T07:28:54.270Z",
+      "completedBy": "Test_2"
     }
   ]
 }
