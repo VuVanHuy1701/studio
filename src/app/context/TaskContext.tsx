@@ -25,6 +25,7 @@ const TaskContext = createContext<TaskContextType | undefined>(undefined);
 export function TaskProvider({ children }: { children: React.ReactNode }) {
   const [allTasks, setAllTasks] = useState<Task[]>([]);
   const [isHydrated, setIsHydrated] = useState(false);
+  const [idsLoaded, setIdsLoaded] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
   
@@ -59,10 +60,8 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
-    // Faster polling for multi-device sync (10 seconds)
     const interval = setInterval(refreshTasks, 10000);
     
-    // Refresh when user returns to the app
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
         refreshTasks();
@@ -78,6 +77,7 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (user) {
+      setIdsLoaded(false);
       const savedNew = localStorage.getItem(`task_compass_notified_ids_${user.uid}`);
       const savedCompleted = localStorage.getItem(`task_compass_notified_comp_ids_${user.uid}`);
       
@@ -92,6 +92,7 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
       } else {
         setNotifiedCompletedIds(new Set());
       }
+      setIdsLoaded(true);
     }
   }, [user]);
 
@@ -115,11 +116,9 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
     return getVisibleTasks().filter(task => !task.completed && new Date(task.dueDate) < now);
   }, [getVisibleTasks]);
 
-  // Real-time Event Notifications
   useEffect(() => {
-    if (!isHydrated || !user || allTasks.length === 0) return;
+    if (!isHydrated || !user || !idsLoaded || allTasks.length === 0) return;
 
-    // 1. Assignment Notifications
     const newTasksToNotify = allTasks.filter(t => {
       const isAssignedToMe = t.assignedTo.some(assignee => 
         assignee === user.displayName || 
@@ -170,7 +169,6 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
       });
     }
 
-    // 2. Completion Notifications for Admin
     if (user.role === 'admin') {
       const completedTasksToNotify = allTasks.filter(t => 
         t.completed && 
@@ -216,9 +214,8 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
         });
       }
     }
-  }, [allTasks, user, isHydrated, notifiedTaskIds, notifiedCompletedIds, toast]);
+  }, [allTasks, user, isHydrated, idsLoaded, notifiedTaskIds, notifiedCompletedIds, toast]);
 
-  // Scheduled Status Summary (7 AM and 7 PM)
   useEffect(() => {
     if (!isHydrated || !user) return;
 
