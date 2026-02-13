@@ -1,3 +1,4 @@
+
 "use client";
 
 import { TaskProvider, useTasks } from '@/app/context/TaskContext';
@@ -7,6 +8,7 @@ import { TaskForm } from '@/components/tasks/TaskForm';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
+import { Skeleton } from '@/components/ui/skeleton';
 import { 
   CheckCircle2, 
   Calendar, 
@@ -26,6 +28,7 @@ import { useRef, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { Task } from '@/app/lib/types';
+import { motion, AnimatePresence } from 'framer-motion';
 
 function DashboardContent() {
   const { tasks, getOverdueTasks, exportTasks, importTasks } = useTasks();
@@ -34,9 +37,13 @@ function DashboardContent() {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [mounted, setMounted] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
     setMounted(true);
+    // Simulate initial data hydration delay for smoother skeleton transition
+    const timer = setTimeout(() => setIsLoaded(true), 800);
+    return () => clearTimeout(timer);
   }, []);
 
   const todayTasks = tasks.filter(t => isToday(new Date(t.dueDate)));
@@ -44,17 +51,10 @@ function DashboardContent() {
   const sortTasks = (taskList: Task[]) => {
     const priorityWeight = { High: 3, Medium: 2, Low: 1 };
     return [...taskList].sort((a, b) => {
-      // 1. Completion status (incomplete first)
-      if (a.completed !== b.completed) {
-        return a.completed ? 1 : -1;
-      }
-      // 2. Priority (High > Medium > Low)
+      if (a.completed !== b.completed) return a.completed ? 1 : -1;
       const weightA = priorityWeight[a.priority] || 0;
       const weightB = priorityWeight[b.priority] || 0;
-      if (weightA !== weightB) {
-        return weightB - weightA;
-      }
-      // 3. Due Date
+      if (weightA !== weightB) return weightB - weightA;
       return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
     });
   };
@@ -89,16 +89,33 @@ function DashboardContent() {
 
   const isAdmin = user?.role === 'admin';
 
-  if (!mounted) {
-    return null;
-  }
+  if (!mounted) return null;
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    show: { opacity: 1, y: 0 }
+  };
 
   return (
     <div className="min-h-screen pb-32 md:pb-10 md:pt-10">
       <Navbar />
       
       <main className="max-w-5xl mx-auto px-4 py-4 md:py-8 space-y-6 md:space-y-8">
-        <header className="flex flex-row items-center justify-between gap-4">
+        <motion.header 
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="flex flex-row items-center justify-between gap-4"
+        >
           <div>
             <h1 className="text-xl md:text-3xl font-bold text-primary tracking-tight leading-none">{t('todaysCompass')}</h1>
             <p className="text-[10px] md:text-sm text-muted-foreground font-medium mt-1">{format(new Date(), 'EEEE, MMMM do')}</p>
@@ -109,53 +126,81 @@ function DashboardContent() {
               <p className="font-bold text-primary text-xs md:text-base">{user.displayName}</p>
             </div>
           )}
-        </header>
+        </motion.header>
 
-        <section className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
-          <Card className="border-none shadow-sm bg-primary text-primary-foreground overflow-hidden relative">
-            <div className="absolute top-0 right-0 p-2 md:p-3 opacity-10">
-              <CheckCircle2 className="w-8 h-8 md:w-12 md:h-12" />
-            </div>
-            <CardContent className="p-3 md:p-4">
-              <h3 className="text-[8px] md:text-[10px] font-bold uppercase opacity-80 mb-0.5 md:mb-1">{t('dailyFocus')}</h3>
-              <div className="text-xl md:text-3xl font-bold mb-1 md:mb-2">{completedToday}/{totalToday}</div>
-              <Progress value={progress} className="h-1 bg-white/20" />
-              <p className="text-[8px] md:text-[10px] mt-1.5 md:mt-2 opacity-80 font-medium">{t('tasksCompleted')}</p>
-            </CardContent>
-          </Card>
+        <motion.section 
+          variants={containerVariants}
+          initial="hidden"
+          animate="show"
+          className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4"
+        >
+          <motion.div variants={itemVariants}>
+            <Card className="border-none shadow-sm bg-primary text-primary-foreground overflow-hidden relative">
+              <div className="absolute top-0 right-0 p-2 md:p-3 opacity-10">
+                <CheckCircle2 className="w-8 h-8 md:w-12 md:h-12" />
+              </div>
+              <CardContent className="p-3 md:p-4">
+                <h3 className="text-[8px] md:text-[10px] font-bold uppercase opacity-80 mb-0.5 md:mb-1">{t('dailyFocus')}</h3>
+                {!isLoaded ? <Skeleton className="h-8 w-16 bg-white/20 mb-2" /> : <div className="text-xl md:text-3xl font-bold mb-1 md:mb-2">{completedToday}/{totalToday}</div>}
+                <Progress value={progress} className="h-1 bg-white/20" />
+                <p className="text-[8px] md:text-[10px] mt-1.5 md:mt-2 opacity-80 font-medium">{t('tasksCompleted')}</p>
+              </CardContent>
+            </Card>
+          </motion.div>
 
-          <Card className="border-none shadow-sm">
-            <CardContent className="p-3 md:p-4">
-              <h3 className="text-[8px] md:text-[10px] font-bold text-muted-foreground uppercase mb-0.5 md:mb-1 tracking-wider">{t('weeklySummary')}</h3>
-              <div className="text-xl md:text-3xl font-bold text-primary">{completedThisWeek}</div>
-              <p className="text-[8px] md:text-[10px] text-muted-foreground mt-1 font-medium">{t('tasksFinishedWeek')}</p>
-            </CardContent>
-          </Card>
+          <motion.div variants={itemVariants}>
+            <Card className="border-none shadow-sm h-full">
+              <CardContent className="p-3 md:p-4">
+                <h3 className="text-[8px] md:text-[10px] font-bold text-muted-foreground uppercase mb-0.5 md:mb-1 tracking-wider">{t('weeklySummary')}</h3>
+                {!isLoaded ? <Skeleton className="h-8 w-12 mb-1" /> : <div className="text-xl md:text-3xl font-bold text-primary">{completedThisWeek}</div>}
+                <p className="text-[8px] md:text-[10px] text-muted-foreground mt-1 font-medium">{t('tasksFinishedWeek')}</p>
+              </CardContent>
+            </Card>
+          </motion.div>
 
-          <Card className="border-none shadow-sm border-l-4 border-l-destructive col-span-2 md:col-span-1">
-            <CardContent className="p-3 md:p-4">
-              <h3 className="text-[8px] md:text-[10px] font-bold text-destructive uppercase mb-0.5 md:mb-1 tracking-wider">{t('overdue')}</h3>
-              <div className="text-xl md:text-3xl font-bold text-destructive">{overdue.length}</div>
-              <p className="text-[8px] md:text-[10px] text-muted-foreground mt-1 font-medium">{t('needsAttention')}</p>
-            </CardContent>
-          </Card>
-        </section>
+          <motion.div variants={itemVariants} className="col-span-2 md:col-span-1">
+            <Card className="border-none shadow-sm border-l-4 border-l-destructive h-full">
+              <CardContent className="p-3 md:p-4">
+                <h3 className="text-[8px] md:text-[10px] font-bold text-destructive uppercase mb-0.5 md:mb-1 tracking-wider">{t('overdue')}</h3>
+                {!isLoaded ? <Skeleton className="h-8 w-12 mb-1" /> : <div className="text-xl md:text-3xl font-bold text-destructive">{overdue.length}</div>}
+                <p className="text-[8px] md:text-[10px] text-muted-foreground mt-1 font-medium">{t('needsAttention')}</p>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </motion.section>
 
-        {overdue.length > 0 && (
-          <section className="space-y-4 md:space-y-6">
-            <div className="flex items-center gap-2 text-destructive">
-              <AlertCircle className="w-5 h-5" />
-              <h2 className="text-base md:text-xl font-bold">Overdue Tasks</h2>
-            </div>
-            <div className={cn(
-              "grid gap-4 md:gap-6",
-              isAdmin ? "grid-cols-1" : "grid-cols-1 lg:grid-cols-2"
-            )}>
-              {sortTasks(overdue).map(task => (
-                <TaskCard key={task.id} task={task} />
-              ))}
+        {!isLoaded ? (
+          <section className="space-y-4">
+            <Skeleton className="h-8 w-48" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Skeleton className="h-32 w-full rounded-2xl" />
+              <Skeleton className="h-32 w-full rounded-2xl" />
             </div>
           </section>
+        ) : (
+          <AnimatePresence>
+            {overdue.length > 0 && (
+              <motion.section 
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="space-y-4 md:space-y-6 overflow-hidden"
+              >
+                <div className="flex items-center gap-2 text-destructive">
+                  <AlertCircle className="w-5 h-5" />
+                  <h2 className="text-base md:text-xl font-bold">Overdue Tasks</h2>
+                </div>
+                <div className={cn(
+                  "grid gap-4 md:gap-6",
+                  isAdmin ? "grid-cols-1" : "grid-cols-1 lg:grid-cols-2"
+                )}>
+                  {sortTasks(overdue).map(task => (
+                    <TaskCard key={task.id} task={task} />
+                  ))}
+                </div>
+              </motion.section>
+            )}
+          </AnimatePresence>
         )}
 
         <section className="space-y-4 md:space-y-6">
@@ -171,55 +216,78 @@ function DashboardContent() {
             </Button>
           </div>
 
-          <div className={cn(
-            "grid gap-6 md:gap-8",
-            isAdmin ? "grid-cols-1" : "grid-cols-1 lg:grid-cols-2"
-          )}>
-            <div className="space-y-3">
-              <div className="flex items-center gap-2 border-b border-primary/10 pb-1.5 md:pb-2">
-                <ShieldCheck className="w-3 h-3 md:w-4 md:h-4 text-accent" />
-                <h3 className="text-[9px] md:text-xs font-bold uppercase tracking-widest text-muted-foreground">
-                  {isAdmin ? "Tasks Assigned to Users" : "From Administrator"}
-                </h3>
+          {!isLoaded ? (
+            <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
+              <div className="space-y-3">
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-24 w-full rounded-2xl" />
+                <Skeleton className="h-24 w-full rounded-2xl" />
               </div>
-              <div className="grid gap-3 md:gap-4">
-                {adminTasks.length > 0 ? (
-                  adminTasks.map(task => (
-                    <TaskCard key={task.id} task={task} />
-                  ))
-                ) : (
-                  <div className="text-center py-6 md:py-10 border-2 border-dashed rounded-2xl border-primary/5 bg-muted/20">
-                    <p className="text-[10px] md:text-sm text-muted-foreground italic">
-                      {isAdmin ? "No tasks assigned for today" : "No admin tasks today"}
-                    </p>
-                  </div>
-                )}
+              <div className="space-y-3">
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-24 w-full rounded-2xl" />
               </div>
             </div>
-
-            {!isAdmin && (
-              <div className="space-y-3">
+          ) : (
+            <motion.div 
+              variants={containerVariants}
+              initial="hidden"
+              animate="show"
+              className={cn(
+                "grid gap-6 md:gap-8",
+                isAdmin ? "grid-cols-1" : "grid-cols-1 lg:grid-cols-2"
+              )}
+            >
+              <motion.div variants={itemVariants} className="space-y-3">
                 <div className="flex items-center gap-2 border-b border-primary/10 pb-1.5 md:pb-2">
-                  <User className="w-3 h-3 md:w-4 md:h-4 text-primary" />
-                  <h3 className="text-[9px] md:text-xs font-bold uppercase tracking-widest text-muted-foreground">Personal Tasks</h3>
+                  <ShieldCheck className="w-3 h-3 md:w-4 md:h-4 text-accent" />
+                  <h3 className="text-[9px] md:text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                    {isAdmin ? "Tasks Assigned to Users" : "From Administrator"}
+                  </h3>
                 </div>
                 <div className="grid gap-3 md:gap-4">
-                  {personalTasks.length > 0 ? (
-                    personalTasks.map(task => (
+                  {adminTasks.length > 0 ? (
+                    adminTasks.map(task => (
                       <TaskCard key={task.id} task={task} />
                     ))
                   ) : (
                     <div className="text-center py-6 md:py-10 border-2 border-dashed rounded-2xl border-primary/5 bg-muted/20">
-                      <p className="text-[10px] md:text-sm text-muted-foreground italic">No personal tasks today</p>
+                      <p className="text-[10px] md:text-sm text-muted-foreground italic">
+                        {isAdmin ? "No tasks assigned for today" : "No admin tasks today"}
+                      </p>
                     </div>
                   )}
                 </div>
-              </div>
-            )}
-          </div>
+              </motion.div>
 
-          {todayTasks.length === 0 && overdue.length === 0 && (
-            <div className="text-center py-10 md:py-16 bg-white rounded-3xl border border-dashed text-muted-foreground flex flex-col items-center gap-3 md:gap-4 shadow-sm">
+              {!isAdmin && (
+                <motion.div variants={itemVariants} className="space-y-3">
+                  <div className="flex items-center gap-2 border-b border-primary/10 pb-1.5 md:pb-2">
+                    <User className="w-3 h-3 md:w-4 md:h-4 text-primary" />
+                    <h3 className="text-[9px] md:text-xs font-bold uppercase tracking-widest text-muted-foreground">Personal Tasks</h3>
+                  </div>
+                  <div className="grid gap-3 md:gap-4">
+                    {personalTasks.length > 0 ? (
+                      personalTasks.map(task => (
+                        <TaskCard key={task.id} task={task} />
+                      ))
+                    ) : (
+                      <div className="text-center py-6 md:py-10 border-2 border-dashed rounded-2xl border-primary/5 bg-muted/20">
+                        <p className="text-[10px] md:text-sm text-muted-foreground italic">No personal tasks today</p>
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+            </motion.div>
+          )}
+
+          {isLoaded && todayTasks.length === 0 && overdue.length === 0 && (
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="text-center py-10 md:py-16 bg-white rounded-3xl border border-dashed text-muted-foreground flex flex-col items-center gap-3 md:gap-4 shadow-sm"
+            >
               <div className="bg-primary/10 p-3 md:p-4 rounded-full">
                 <CheckCircle2 className="w-8 h-8 md:w-10 md:h-10 text-primary opacity-40" />
               </div>
@@ -227,7 +295,7 @@ function DashboardContent() {
                 <p className="text-sm md:text-lg font-bold text-foreground">{t('noTasksToday')}</p>
                 <p className="text-xs md:text-sm">{t('enjoyClearDay')}</p>
               </div>
-            </div>
+            </motion.div>
           )}
         </section>
 
