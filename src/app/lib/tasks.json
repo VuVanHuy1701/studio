@@ -599,15 +599,18 @@
       "description": "lần 2",
       "category": "Work",
       "dueDate": "2026-02-13T09:30:00.000Z",
-      "completed": false,
+      "completed": true,
       "priority": "High",
       "assignedTo": [
         "Test"
       ],
       "createdBy": "admin-id",
       "additionalTimeAllocated": true,
-      "progress": 5,
-      "id": "424a2bz"
+      "progress": 100,
+      "id": "424a2bz",
+      "notes": "đã xong",
+      "completedAt": "2026-02-13T06:17:02.331Z",
+      "completedBy": "Test"
     }
   ]
 }

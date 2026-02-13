@@ -44,7 +44,8 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
         setAllTasks(JSON.parse(savedTasks).map((t: any) => ({
           ...t,
           dueDate: new Date(t.dueDate),
-          completedAt: t.completedAt ? new Date(t.completedAt) : undefined
+          completedAt: t.completedAt ? new Date(t.completedAt) : undefined,
+          createdAt: t.createdAt ? new Date(t.createdAt) : undefined
         })));
       }
     }
@@ -134,6 +135,8 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
     if (newTasksToNotify.length > 0) {
       newTasksToNotify.forEach(t => {
         const dueStr = format(new Date(t.dueDate), 'HH:mm - MMM dd');
+        const assignedTime = t.createdAt ? new Date(t.createdAt) : new Date();
+        const assignedStr = format(assignedTime, 'HH:mm - MMM dd');
         const importance = t.priority;
         const variant = t.priority.toLowerCase() as 'low' | 'medium' | 'high';
 
@@ -146,6 +149,9 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
               <div className="text-[11px] opacity-80 mt-1">
                 {dueStr}; Importance: <span className="font-bold">{importance}</span>
               </div>
+              <div className="text-[10px] opacity-70 mt-1 font-medium italic">
+                Assigned at: {assignedStr}
+              </div>
             </div>
           ),
           variant: variant,
@@ -154,7 +160,7 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
 
         if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
           new Notification("New task assigned", {
-            body: `${t.title}\n${t.description || 'No content'}\n${dueStr}; Importance: ${importance}`,
+            body: `New task assigned\n${t.title}\n${t.description || 'No content'}\n${dueStr}; Importance: ${importance}\nAssigned at: ${assignedStr}`,
             icon: 'https://picsum.photos/seed/taskicon/192/192',
             requireInteraction: true 
           });
@@ -282,7 +288,8 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
       ...task, 
       id: Math.random().toString(36).substring(2, 9),
       progress: task.progress ?? 0,
-      assignedTo: task.assignedTo || ['Me']
+      assignedTo: task.assignedTo || ['Me'],
+      createdAt: new Date()
     };
     setAllTasks(prev => [...prev, newTask]);
   };
@@ -349,6 +356,7 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
           ...t,
           dueDate: new Date(t.dueDate),
           completedAt: t.completedAt ? new Date(t.completedAt) : undefined,
+          createdAt: t.createdAt ? new Date(t.createdAt) : undefined,
           assignedTo: Array.isArray(t.assignedTo) ? t.assignedTo : [t.assignedTo || 'Me'],
           progress: t.progress ?? (t.completed ? 100 : 0)
         }));

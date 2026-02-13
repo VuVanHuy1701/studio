@@ -32,6 +32,7 @@ export interface Task {
   notes?: string; 
   additionalTimeAllocated?: boolean; 
   progress?: number; 
+  createdAt?: Date; // Added track assignment time
 }
 
 export interface ProgressStats {
