@@ -5,7 +5,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { Task } from '@/app/lib/types';
 import { useAuth } from '@/app/context/AuthContext';
 import { getTasksFromFile, persistTasksToFile } from '@/app/actions/task-actions';
-import { format, isPast } from 'date-fns';
+import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 
 interface TaskContextType {
@@ -59,8 +59,21 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
-    const interval = setInterval(refreshTasks, 30000);
-    return () => clearInterval(interval);
+    // Faster polling for multi-device sync (10 seconds)
+    const interval = setInterval(refreshTasks, 10000);
+    
+    // Refresh when user returns to the app
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        refreshTasks();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, [refreshTasks]);
 
   useEffect(() => {
@@ -85,7 +98,7 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
   const getVisibleTasks = useCallback(() => {
     if (!user) return [];
     return allTasks.filter(t => {
-      if (t.createdBy === user.uid) return true;
+      if (t.createdBy === user.uid || t.createdBy === 'admin-id' && user.role === 'admin') return true;
       const isAssignedToMe = t.assignedTo.some(assignee => 
         assignee === user.displayName || 
         assignee === user.email || 
@@ -106,7 +119,7 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!isHydrated || !user || allTasks.length === 0) return;
 
-    // 1. Assignment Notifications for Users
+    // 1. Assignment Notifications
     const newTasksToNotify = allTasks.filter(t => {
       const isAssignedToMe = t.assignedTo.some(assignee => 
         assignee === user.displayName || 
@@ -141,9 +154,8 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
         });
 
         if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
-          const systemBody = `New task assigned\n${t.title}\n${t.description || 'No content'}\n${dueStr}; Importance: ${importance}`;
-          new Notification("Task Assignment", {
-            body: systemBody,
+          new Notification("New task assigned", {
+            body: `${t.title}\n${t.description || 'No content'}\n${dueStr}; Importance: ${importance}`,
             icon: 'https://picsum.photos/seed/taskicon/192/192',
             requireInteraction: true 
           });
@@ -158,7 +170,7 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
       });
     }
 
-    // 2. Completion Notifications for Administrators (only for admin-created tasks)
+    // 2. Completion Notifications for Admin
     if (user.role === 'admin') {
       const completedTasksToNotify = allTasks.filter(t => 
         t.completed && 
@@ -188,9 +200,8 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
           });
 
           if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
-            const systemBody = `Task completed\n${t.title}\n${t.description || 'No description'}\nFinished: ${compTimeStr}\nNotes: ${t.notes || 'None'}\nBy: ${t.completedBy}`;
             new Notification("Task Status Update", {
-              body: systemBody,
+              body: `Task completed\n${t.title}\nFinished: ${compTimeStr}\nBy: ${t.completedBy}`,
               icon: 'https://picsum.photos/seed/taskdone/192/192',
               requireInteraction: true 
             });
@@ -207,7 +218,7 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
     }
   }, [allTasks, user, isHydrated, notifiedTaskIds, notifiedCompletedIds, toast]);
 
-  // Scheduled Status Summary Notifications (7 AM and 7 PM)
+  // Scheduled Status Summary (7 AM and 7 PM)
   useEffect(() => {
     if (!isHydrated || !user) return;
 
@@ -216,8 +227,6 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
       const hours = now.getHours();
       const minutes = now.getMinutes();
       
-      // Target times: 7:00 and 19:00 (7 AM and 7 PM)
-      // We check for a 5-minute window to ensure the notification triggers even if the check doesn't hit the exact second
       const is7AM = hours === 7 && minutes >= 0 && minutes < 5;
       const is7PM = hours === 19 && minutes >= 0 && minutes < 5;
       
@@ -232,17 +241,14 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
           const overdueCount = getOverdueTasks().length;
 
           if (unfinished > 0 || overdueCount > 0) {
-            const title = "Tasks to be completed";
-            const desc = (
-              <div className="flex flex-col gap-0.5 mt-1">
-                <div className="text-sm font-bold leading-tight">Unfinished tasks: {unfinished}</div>
-                <div className="text-sm font-bold leading-tight">Overdue tasks: {overdueCount}</div>
-              </div>
-            );
-
             toast({
-              title: title,
-              description: desc,
+              title: "Tasks to be completed",
+              description: (
+                <div className="flex flex-col gap-0.5 mt-1">
+                  <div className="text-sm font-bold leading-tight">Unfinished tasks: {unfinished}</div>
+                  <div className="text-sm font-bold leading-tight">Overdue tasks: {overdueCount}</div>
+                </div>
+              ),
               variant: overdueCount > 0 ? "high" : "medium",
               duration: 86400000, 
             });
@@ -250,7 +256,6 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
             if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
               new Notification("Task Compass Summary", {
                 body: `Tasks to be completed\nUnfinished tasks: ${unfinished}\nOverdue tasks: ${overdueCount}`,
-                icon: 'https://picsum.photos/seed/summary/192/192',
                 requireInteraction: true
               });
             }
@@ -261,9 +266,8 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
       }
     };
 
-    const intervalId = setInterval(checkScheduledNotifications, 60000); // Check every minute
-    checkScheduledNotifications(); // Initial check on mount
-    
+    const intervalId = setInterval(checkScheduledNotifications, 60000);
+    checkScheduledNotifications();
     return () => clearInterval(intervalId);
   }, [isHydrated, user, getVisibleTasks, getOverdueTasks, toast]);
 
@@ -271,7 +275,7 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
     if (isHydrated) {
       localStorage.setItem('task_compass_tasks', JSON.stringify(allTasks));
       persistTasksToFile(allTasks).catch(err => {
-        console.warn('System file sync skipped or failed:', err);
+        console.warn('System file sync failed:', err);
       });
     }
   }, [allTasks, isHydrated]);
