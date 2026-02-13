@@ -1,10 +1,11 @@
+
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { Task } from '@/app/lib/types';
 import { useAuth } from '@/app/context/AuthContext';
 import { getTasksFromFile, persistTasksToFile } from '@/app/actions/task-actions';
-import { format } from 'date-fns';
+import { format, isPast } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 
 interface TaskContextType {
@@ -81,9 +82,31 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
     }
   }, [user]);
 
+  const getVisibleTasks = useCallback(() => {
+    if (!user) return [];
+    return allTasks.filter(t => {
+      if (t.createdBy === user.uid) return true;
+      const isAssignedToMe = t.assignedTo.some(assignee => 
+        assignee === user.displayName || 
+        assignee === user.email || 
+        assignee === user.uid ||
+        (user.username && assignee === user.username) ||
+        (assignee === 'Me' && t.createdBy === user.uid)
+      );
+      return isAssignedToMe;
+    });
+  }, [allTasks, user]);
+
+  const getOverdueTasks = useCallback(() => {
+    const now = new Date();
+    return getVisibleTasks().filter(task => !task.completed && new Date(task.dueDate) < now);
+  }, [getVisibleTasks]);
+
+  // Real-time Event Notifications
   useEffect(() => {
     if (!isHydrated || !user || allTasks.length === 0) return;
 
+    // 1. Assignment Notifications for Users
     const newTasksToNotify = allTasks.filter(t => {
       const isAssignedToMe = t.assignedTo.some(assignee => 
         assignee === user.displayName || 
@@ -135,6 +158,7 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
       });
     }
 
+    // 2. Completion Notifications for Administrators (only for admin-created tasks)
     if (user.role === 'admin') {
       const completedTasksToNotify = allTasks.filter(t => 
         t.completed && 
@@ -182,6 +206,66 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
       }
     }
   }, [allTasks, user, isHydrated, notifiedTaskIds, notifiedCompletedIds, toast]);
+
+  // Scheduled Status Summary Notifications (7 AM and 7 PM)
+  useEffect(() => {
+    if (!isHydrated || !user) return;
+
+    const checkScheduledNotifications = () => {
+      const now = new Date();
+      const hours = now.getHours();
+      const minutes = now.getMinutes();
+      
+      // Target times: 7:00 and 19:00 (7 AM and 7 PM)
+      // We check for a 5-minute window to ensure the notification triggers even if the check doesn't hit the exact second
+      const is7AM = hours === 7 && minutes >= 0 && minutes < 5;
+      const is7PM = hours === 19 && minutes >= 0 && minutes < 5;
+      
+      if (is7AM || is7PM) {
+        const slotKey = is7AM ? 'AM' : 'PM';
+        const dateKey = format(now, 'yyyy-MM-dd');
+        const storageKey = `task_compass_scheduled_summary_${user.uid}_${dateKey}_${slotKey}`;
+        
+        if (!localStorage.getItem(storageKey)) {
+          const visibleTasks = getVisibleTasks();
+          const unfinished = visibleTasks.filter(t => !t.completed).length;
+          const overdueCount = getOverdueTasks().length;
+
+          if (unfinished > 0 || overdueCount > 0) {
+            const title = "Tasks to be completed";
+            const desc = (
+              <div className="flex flex-col gap-0.5 mt-1">
+                <div className="text-sm font-bold leading-tight">Unfinished tasks: {unfinished}</div>
+                <div className="text-sm font-bold leading-tight">Overdue tasks: {overdueCount}</div>
+              </div>
+            );
+
+            toast({
+              title: title,
+              description: desc,
+              variant: overdueCount > 0 ? "high" : "medium",
+              duration: 86400000, 
+            });
+
+            if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+              new Notification("Task Compass Summary", {
+                body: `Tasks to be completed\nUnfinished tasks: ${unfinished}\nOverdue tasks: ${overdueCount}`,
+                icon: 'https://picsum.photos/seed/summary/192/192',
+                requireInteraction: true
+              });
+            }
+
+            localStorage.setItem(storageKey, 'sent');
+          }
+        }
+      }
+    };
+
+    const intervalId = setInterval(checkScheduledNotifications, 60000); // Check every minute
+    checkScheduledNotifications(); // Initial check on mount
+    
+    return () => clearInterval(intervalId);
+  }, [isHydrated, user, getVisibleTasks, getOverdueTasks, toast]);
 
   useEffect(() => {
     if (isHydrated) {
@@ -244,26 +328,6 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
 
   const deleteTask = (id: string) => {
     setAllTasks(prev => prev.filter(t => t.id !== id));
-  };
-
-  const getVisibleTasks = () => {
-    if (!user) return [];
-    return allTasks.filter(t => {
-      if (t.createdBy === user.uid) return true;
-      const isAssignedToMe = t.assignedTo.some(assignee => 
-        assignee === user.displayName || 
-        assignee === user.email || 
-        assignee === user.uid ||
-        (user.username && assignee === user.username) ||
-        (assignee === 'Me' && t.createdBy === user.uid)
-      );
-      return isAssignedToMe;
-    });
-  };
-
-  const getOverdueTasks = () => {
-    const now = new Date();
-    return getVisibleTasks().filter(task => !task.completed && new Date(task.dueDate) < now);
   };
 
   const exportTasks = () => {
