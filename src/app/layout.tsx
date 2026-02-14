@@ -25,6 +25,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
+  viewportFit: 'cover',
 };
 
 export default function RootLayout({
@@ -37,7 +38,7 @@ export default function RootLayout({
       <head>
         <link rel="apple-touch-icon" href="https://picsum.photos/seed/taskicon192/192/192" />
       </head>
-      <body className="antialiased min-h-screen bg-background">
+      <body className="antialiased min-h-screen bg-background pb-[env(safe-area-inset-bottom)]">
         <AuthProvider>
           <SettingsProvider>
             {children}

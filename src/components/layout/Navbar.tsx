@@ -1,9 +1,8 @@
-
 "use client";
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Compass, CheckCircle2, BarChart3, Moon, Sun, Globe, LogIn, LogOut, User, ShieldCheck, Users, UserCircle } from 'lucide-react';
+import { Compass, CheckCircle2, BarChart3, Moon, Sun, Globe, LogIn, LogOut, User, ShieldCheck, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSettings } from '@/app/context/SettingsContext';
 import { useAuth } from '@/app/context/AuthContext';
@@ -36,7 +35,7 @@ import { useToast } from '@/hooks/use-toast';
 export function Navbar() {
   const pathname = usePathname();
   const { theme, toggleTheme, language, setLanguage, t } = useSettings();
-  const { user, loginWithGoogle, loginWithCredentials, logout, managedUsers } = useAuth();
+  const { user, loginWithGoogle, loginWithCredentials, logout } = useAuth();
   const { toast } = useToast();
   
   const [loginUsername, setLoginUsername] = useState('');
@@ -62,13 +61,12 @@ export function Navbar() {
     { name: t('progress'), href: '/progress', icon: BarChart3 },
   ];
 
-  // Admin-only management link
   if (user?.role === 'admin') {
     navItems.push({ name: 'Users', href: '/admin/users', icon: Users });
   }
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-2xl border-t shadow-[0_-8px_30px_-10px_rgba(0,0,0,0.1)] md:bottom-auto md:top-0 md:border-t-0 md:border-b transition-all duration-300">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-2xl border-t shadow-[0_-8px_30px_-10px_rgba(0,0,0,0.1)] md:bottom-auto md:top-0 md:border-t-0 md:border-b transition-all duration-300 pb-[env(safe-area-inset-bottom)]">
       <div className="max-w-5xl mx-auto px-4 h-20 md:h-16 flex items-center justify-between">
         <div className="flex flex-1 justify-around md:justify-start items-center gap-1 md:gap-4">
           <Link href="/" className="hidden md:flex items-center gap-2 mr-6 text-primary font-black uppercase tracking-tighter text-lg">
@@ -211,14 +209,6 @@ export function Navbar() {
                     </svg>
                     <span className="font-black uppercase tracking-widest text-xs">Google Login</span>
                   </Button>
-                  
-                  <div className="bg-muted/30 p-4 rounded-2xl border border-dashed border-primary/20">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-primary mb-2">Demo Access</p>
-                    <div className="flex flex-col gap-1 text-[11px] font-medium text-muted-foreground">
-                      <div className="flex justify-between"><span>Admin:</span> <code className="bg-background px-1 rounded">admin / admin@123</code></div>
-                      <div className="flex justify-between"><span>User:</span> <code className="bg-background px-1 rounded">alice / password123</code></div>
-                    </div>
-                  </div>
                 </div>
               </DialogContent>
             </Dialog>
