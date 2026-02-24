@@ -1,3 +1,4 @@
+
 {
   "name": "Task Compass",
   "short_name": "Compass",
@@ -17,7 +18,7 @@
       "src": "https://picsum.photos/seed/taskicon512/512/512",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "any maskable"
     }
   ]
 }

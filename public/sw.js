@@ -1,3 +1,4 @@
+
 self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
@@ -13,9 +14,8 @@ self.addEventListener('notificationclick', (event) => {
 
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
-      // Check if there is already a window tab open with the target URL
-      for (var i = 0; i < windowClients.length; i++) {
-        var client = windowClients[i];
+      // Check if there is already a window open and focus it
+      for (let client of windowClients) {
         if (client.url.includes(urlToOpen) && 'focus' in client) {
           return client.focus();
         }
@@ -26,9 +26,4 @@ self.addEventListener('notificationclick', (event) => {
       }
     })
   );
-});
-
-// Basic fetch handler for offline support
-self.addEventListener('fetch', (event) => {
-  // Simple pass-through or caching logic can go here
 });
