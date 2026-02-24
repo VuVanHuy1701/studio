@@ -1,4 +1,3 @@
-// Service Worker for Task Compass PWA
 self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
@@ -9,15 +8,14 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  
-  // Get the target URL from the notification data
+
   const urlToOpen = event.notification.data?.url || '/';
 
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
-      // If a window is already open with the target URL, focus it
-      for (let i = 0; i < windowClients.length; i++) {
-        const client = windowClients[i];
+      // Check if there is already a window tab open with the target URL
+      for (var i = 0; i < windowClients.length; i++) {
+        var client = windowClients[i];
         if (client.url.includes(urlToOpen) && 'focus' in client) {
           return client.focus();
         }
@@ -28,4 +26,9 @@ self.addEventListener('notificationclick', (event) => {
       }
     })
   );
+});
+
+// Basic fetch handler for offline support
+self.addEventListener('fetch', (event) => {
+  // Simple pass-through or caching logic can go here
 });
