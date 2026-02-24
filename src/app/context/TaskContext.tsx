@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
@@ -119,16 +118,20 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
 
   const triggerSystemNotification = useCallback(async (title: string, body: string, taskId?: string) => {
     if (typeof window !== 'undefined' && 'serviceWorker' in navigator && 'Notification' in window) {
-      const registration = await navigator.serviceWorker.ready;
-      if (Notification.permission === 'granted') {
-        registration.showNotification(title, {
-          body,
-          icon: 'https://picsum.photos/seed/taskicon/192/192',
-          requireInteraction: true,
-          data: {
-            url: taskId ? `/tasks?taskId=${taskId}` : '/'
-          }
-        });
+      try {
+        const registration = await navigator.serviceWorker.ready;
+        if (Notification.permission === 'granted') {
+          registration.showNotification(title, {
+            body,
+            icon: 'https://picsum.photos/seed/taskicon/192/192',
+            requireInteraction: true,
+            data: {
+              url: taskId ? `/tasks?taskId=${taskId}` : '/'
+            }
+          });
+        }
+      } catch (err) {
+        console.warn('System notification failed:', err);
       }
     }
   }, []);
