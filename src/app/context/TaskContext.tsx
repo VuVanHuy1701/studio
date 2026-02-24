@@ -117,6 +117,22 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
     return getVisibleTasks().filter(task => !task.completed && new Date(task.dueDate) < now);
   }, [getVisibleTasks]);
 
+  const triggerSystemNotification = useCallback(async (title: string, body: string, taskId?: string) => {
+    if (typeof window !== 'undefined' && 'serviceWorker' in navigator && 'Notification' in window) {
+      const registration = await navigator.serviceWorker.ready;
+      if (Notification.permission === 'granted') {
+        registration.showNotification(title, {
+          body,
+          icon: 'https://picsum.photos/seed/taskicon/192/192',
+          requireInteraction: true,
+          data: {
+            url: taskId ? `/tasks?taskId=${taskId}` : '/'
+          }
+        });
+      }
+    }
+  }, []);
+
   useEffect(() => {
     if (!isHydrated || !user || !idsLoaded || allTasks.length === 0) return;
 
@@ -158,13 +174,11 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
           duration: 86400000, 
         });
 
-        if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
-          new Notification("New task assigned", {
-            body: `New task assigned\n${t.title}\n${t.description || 'No content'}\n${dueStr}; Importance: ${importance}\nAssigned at: ${assignedStr}`,
-            icon: 'https://picsum.photos/seed/taskicon/192/192',
-            requireInteraction: true 
-          });
-        }
+        triggerSystemNotification(
+          "New task assigned", 
+          `New task assigned\n${t.title}\n${t.description || 'No content'}\n${dueStr}; Importance: ${importance}\nAssigned at: ${assignedStr}`,
+          t.id
+        );
       });
 
       setNotifiedTaskIds(prev => {
@@ -203,13 +217,11 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
             ),
           });
 
-          if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
-            new Notification("Task Status Update", {
-              body: `Task completed\n${t.title}\nFinished: ${compTimeStr}\nBy: ${t.completedBy}`,
-              icon: 'https://picsum.photos/seed/taskdone/192/192',
-              requireInteraction: true 
-            });
-          }
+          triggerSystemNotification(
+            "Task Status Update",
+            `Task completed\n${t.title}\nFinished: ${compTimeStr}\nBy: ${t.completedBy}`,
+            t.id
+          );
         });
 
         setNotifiedCompletedIds(prev => {
@@ -220,7 +232,7 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
         });
       }
     }
-  }, [allTasks, user, isHydrated, idsLoaded, notifiedTaskIds, notifiedCompletedIds, toast]);
+  }, [allTasks, user, isHydrated, idsLoaded, notifiedTaskIds, notifiedCompletedIds, toast, triggerSystemNotification]);
 
   useEffect(() => {
     if (!isHydrated || !user) return;
@@ -256,12 +268,10 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
               duration: 86400000, 
             });
 
-            if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
-              new Notification("Task Compass Summary", {
-                body: `Tasks to be completed\nUnfinished tasks: ${unfinished}\nOverdue tasks: ${overdueCount}`,
-                requireInteraction: true
-              });
-            }
+            triggerSystemNotification(
+              "Task Compass Summary",
+              `Tasks to be completed\nUnfinished tasks: ${unfinished}\nOverdue tasks: ${overdueCount}`
+            );
 
             localStorage.setItem(storageKey, 'sent');
           }
@@ -272,7 +282,7 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
     const intervalId = setInterval(checkScheduledNotifications, 60000);
     checkScheduledNotifications();
     return () => clearInterval(intervalId);
-  }, [isHydrated, user, getVisibleTasks, getOverdueTasks, toast]);
+  }, [isHydrated, user, getVisibleTasks, getOverdueTasks, toast, triggerSystemNotification]);
 
   useEffect(() => {
     if (isHydrated) {

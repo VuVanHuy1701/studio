@@ -16,19 +16,37 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { Task } from '@/app/lib/types';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useSearchParams } from 'next/navigation';
 
 function TasksContent() {
   const { tasks, getOverdueTasks } = useTasks();
   const { user } = useAuth();
+  const searchParams = useSearchParams();
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [mounted, setMounted] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [taskToFocus, setTaskToFocus] = useState<Task | null>(null);
+  const [isFocusDialogOpen, setIsFocusDialogOpen] = useState(false);
 
   useEffect(() => {
     setMounted(true);
     const timer = setTimeout(() => setIsLoaded(true), 600);
     return () => clearTimeout(timer);
   }, []);
+
+  // Handle direct navigation to task details from notification
+  useEffect(() => {
+    if (isLoaded && searchParams.has('taskId')) {
+      const taskId = searchParams.get('taskId');
+      const task = tasks.find(t => t.id === taskId);
+      if (task) {
+        setTaskToFocus(task);
+        setIsFocusDialogOpen(true);
+        // Also jump to the correct date
+        setSelectedDate(new Date(task.dueDate));
+      }
+    }
+  }, [isLoaded, searchParams, tasks]);
 
   const dayTasks = tasks.filter(t => {
     const d = new Date(t.dueDate);
@@ -228,6 +246,13 @@ function TasksContent() {
         </AnimatePresence>
       </main>
 
+      {taskToFocus && (
+        <TaskForm 
+          taskToEdit={taskToFocus} 
+          open={isFocusDialogOpen} 
+          onOpenChange={setIsFocusDialogOpen} 
+        />
+      )}
       <TaskForm />
     </div>
   );
@@ -235,8 +260,10 @@ function TasksContent() {
 
 export default function TasksPage() {
   return (
-    <TaskProvider>
-      <TasksContent />
-    </TaskProvider>
+    <React.Suspense fallback={<div className="p-10 text-center">Loading Schedule...</div>}>
+      <TaskProvider>
+        <TasksContent />
+      </TaskProvider>
+    </React.Suspense>
   );
 }
