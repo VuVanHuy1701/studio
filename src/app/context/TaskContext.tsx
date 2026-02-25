@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
@@ -125,13 +124,12 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
       try {
         const registration = await navigator.serviceWorker.ready;
         if (Notification.permission === 'granted') {
-          const timestamp = Date.now();
           registration.showNotification(title, {
             body,
             icon: 'https://picsum.photos/seed/taskicon192/192/192',
             badge: 'https://picsum.photos/seed/taskbadge96/96/96',
-            requireInteraction: true, // Remains until user manually closes
-            tag: taskId || `notification-${timestamp}`,
+            requireInteraction: true,
+            tag: taskId || `notification-${Date.now()}`,
             data: {
               url: taskId ? `${window.location.origin}/tasks?taskId=${taskId}` : window.location.origin
             }
@@ -146,7 +144,7 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!isHydrated || !user || !idsLoaded || allTasks.length === 0) return;
 
-    // Logic for New Task Notifications (for Users)
+    // Logic for New Task Notifications
     const newTasksToNotify = allTasks.filter(t => {
       const isAssignedToMe = t.assignedTo.some(assignee => 
         assignee === user.displayName || 
@@ -162,18 +160,13 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
     if (newTasksToNotify.length > 0) {
       newTasksToNotify.forEach(t => {
         const dueStr = format(new Date(t.dueDate), 'HH:mm - MMM dd');
-        const assignedTime = t.createdAt ? new Date(t.createdAt) : new Date();
-        const assignedStr = format(assignedTime, 'HH:mm - MMM dd');
-        const importance = t.priority;
-
-        // Structured Layout:
-        // Line 1: New task (Title)
-        // Line 2: Task name
-        // Line 3: Task time
-        // Line 4+: Priority & Assignment info
+        // Redesign structural requirements:
+        // Line 1: Header/Context
+        // Line 2: Task Name
+        // Line 3: Task Time
         triggerSystemNotification(
           "New task assigned", 
-          `Task: ${t.title}\nDue: ${dueStr}\nImportance: ${importance}\nAssigned at: ${assignedStr}`,
+          `New task\nTask: ${t.title}\nTime: ${dueStr}`,
           t.id
         );
       });
@@ -201,14 +194,13 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
         completedTasksToNotify.forEach(t => {
           const compTimeStr = t.completedAt ? format(new Date(t.completedAt), 'HH:mm - MMM dd') : 'Unknown';
           
-          // Structured Layout:
-          // Line 1: Task Completed (Title)
-          // Line 2: Task name
-          // Line 3: Completion time
-          // Line 4+: Completed by info
+          // Redesign structural requirements for Admin:
+          // Line 1: Header/Status
+          // Line 2: Task Name
+          // Line 3: Completion Time
           triggerSystemNotification(
             "Task Completed",
-            `Task: ${t.title}\nFinished: ${compTimeStr}\nBy: ${t.completedBy}`,
+            `Task Completed\nTask: ${t.title}\nTime: ${compTimeStr}`,
             t.id
           );
         });
