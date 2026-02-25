@@ -1,8 +1,8 @@
 
 {
   "name": "Task Compass",
-  "short_name": "Compass",
-  "description": "Navigate your productivity with precision",
+  "short_name": "Task Compass",
+  "description": "Navigate your productivity with precision.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
@@ -11,8 +11,7 @@
     {
       "src": "https://picsum.photos/seed/taskicon192/192/192",
       "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/png"
     },
     {
       "src": "https://picsum.photos/seed/taskicon512/512/512",

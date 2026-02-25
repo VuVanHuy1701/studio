@@ -130,8 +130,8 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
             body,
             icon: 'https://picsum.photos/seed/taskicon192/192/192',
             badge: 'https://picsum.photos/seed/taskbadge96/96/96',
-            requireInteraction: true,
-            tag: taskId || `summary-${timestamp}`,
+            requireInteraction: true, // Remains until user manually closes
+            tag: taskId || `notification-${timestamp}`,
             data: {
               url: taskId ? `${window.location.origin}/tasks?taskId=${taskId}` : window.location.origin
             }
@@ -166,9 +166,14 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
         const assignedStr = format(assignedTime, 'HH:mm - MMM dd');
         const importance = t.priority;
 
+        // Structured Layout:
+        // Line 1: New task (Title)
+        // Line 2: Task name
+        // Line 3: Task time
+        // Line 4+: Priority & Assignment info
         triggerSystemNotification(
           "New task assigned", 
-          `${t.title}\nDue: ${dueStr}\nImportance: ${importance}\nAssigned at: ${assignedStr}`,
+          `Task: ${t.title}\nDue: ${dueStr}\nImportance: ${importance}\nAssigned at: ${assignedStr}`,
           t.id
         );
       });
@@ -196,6 +201,11 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
         completedTasksToNotify.forEach(t => {
           const compTimeStr = t.completedAt ? format(new Date(t.completedAt), 'HH:mm - MMM dd') : 'Unknown';
           
+          // Structured Layout:
+          // Line 1: Task Completed (Title)
+          // Line 2: Task name
+          // Line 3: Completion time
+          // Line 4+: Completed by info
           triggerSystemNotification(
             "Task Completed",
             `Task: ${t.title}\nFinished: ${compTimeStr}\nBy: ${t.completedBy}`,
