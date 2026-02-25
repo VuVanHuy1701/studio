@@ -147,7 +147,6 @@ export function TaskCard({ task }: TaskCardProps) {
     });
     setProgressDialogOpen(false);
     setShowNotesInput(false);
-    toast({ title: isNowCompleted ? "Task Completed" : "Progress Updated" });
   };
 
   return (

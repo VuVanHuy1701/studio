@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
@@ -124,7 +125,7 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
         toast({
           variant: t.priority === 'High' ? 'high' : t.priority === 'Medium' ? 'medium' : 'low',
           title: "New task assigned",
-          description: `Line 1: New task assigned\nLine 2: Task: ${t.title}\nLine 3: Note: ${t.description || 'No description'} - Progress: ${t.progress || 0}%\nLine 4: Deadline: ${dueStr}`,
+          description: `New task assigned\nTask: ${t.title}\nDeadline: ${dueStr}`,
         });
       });
 
@@ -139,6 +140,7 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
     // 2. Administrator Notifications
     if (user.role === 'admin') {
       allTasks.forEach(t => {
+        // Only notify for tasks managed by admin (assigned by admin or admin created)
         const isAdminCreated = t.createdBy === 'admin-id' || t.createdBy === 'admin';
         if (!isAdminCreated) return;
 
@@ -153,7 +155,7 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
           toast({
             variant: "success",
             title: "Task completed",
-            description: `Line 1: Task completed\nLine 2: Task: ${t.title}\nLine 3: Note: ${t.notes || 'No note'} - Progress: 100%\nLine 4: Deadline: ${deadlineStr} - Done: ${compTimeStr}\nLine 5: User: ${whoStr}`,
+            description: `Task completed\nTask: ${t.title}\nNote: ${t.notes || 'No note'} - Progress: 100%\nDeadline: ${deadlineStr} - Done: ${compTimeStr}\nUser: ${whoStr}`,
           });
 
           setNotifiedCompletedIds(prev => {
@@ -165,13 +167,14 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
         } 
         
         // Progress Updated (Yellow Border) - Triggered when notes or progress changes but task is not complete
-        else if (!t.completed && ((t.notes && t.notes !== lastState?.notes) || (t.progress !== lastState?.progress))) {
+        else if (!t.completed && lastState && (t.notes !== lastState.notes || t.progress !== lastState.progress)) {
            toast({
             variant: "warning",
             title: "Progress updated",
-            description: `Line 1: Progress updated\nLine 2: Task: ${t.title}\nLine 3: Note: ${t.notes || 'No note'} - Progress: ${t.progress || 0}%\nLine 4: Deadline: ${deadlineStr}\nLine 5: Reported by: ${whoStr}`,
+            description: `Progress updated\nTask: ${t.title}\nNote: ${t.notes || 'No note'} - Progress: ${t.progress || 0}%\nDeadline: ${deadlineStr}\nReported by: ${whoStr}`,
           });
 
+          // Update tracked notes to avoid repeat notifications for the same content
           setNotifiedNoteIds(prev => {
             const next = new Map(prev);
             next.set(t.id, t.notes || '');
