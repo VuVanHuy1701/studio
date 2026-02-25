@@ -1,7 +1,7 @@
 
 {
   "name": "Task Compass",
-  "short_name": "Compass",
+  "short_name": "Task Compass",
   "description": "Navigate your productivity with precision",
   "start_url": "/",
   "display": "standalone",

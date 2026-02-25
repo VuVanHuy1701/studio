@@ -122,12 +122,11 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
       try {
         const registration = await navigator.serviceWorker.ready;
         if (Notification.permission === 'granted') {
-          // Use a timestamp to ensure uniqueness and order
           const timestamp = Date.now();
           registration.showNotification(title, {
             body,
-            icon: 'https://picsum.photos/seed/taskicon/192/192',
-            badge: 'https://picsum.photos/seed/taskbadge/96/96',
+            icon: 'https://picsum.photos/seed/taskicon192/192/192',
+            badge: 'https://picsum.photos/seed/taskbadge96/96/96',
             requireInteraction: true,
             tag: taskId || `summary-${timestamp}`,
             data: {
