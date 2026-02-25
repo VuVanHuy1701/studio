@@ -1014,6 +1014,25 @@
       "description": "lần 9",
       "category": "Work",
       "dueDate": "2026-02-25T09:30:00.000Z",
+      "completed": true,
+      "priority": "Medium",
+      "assignedTo": [
+        "Test"
+      ],
+      "createdBy": "admin-id",
+      "additionalTimeAllocated": true,
+      "progress": 100,
+      "id": "ljudcov",
+      "createdAt": "2026-02-25T02:43:42.503Z",
+      "notes": "nhiệm vụ",
+      "completedAt": "2026-02-25T02:49:32.617Z",
+      "completedBy": "Test"
+    },
+    {
+      "title": "thông báo màn hình",
+      "description": "lần 10",
+      "category": "Work",
+      "dueDate": "2026-02-25T09:30:00.000Z",
       "completed": false,
       "priority": "Medium",
       "assignedTo": [
@@ -1022,8 +1041,8 @@
       "createdBy": "admin-id",
       "additionalTimeAllocated": true,
       "progress": 0,
-      "id": "ljudcov",
-      "createdAt": "2026-02-25T02:43:42.503Z"
+      "id": "6ugbret",
+      "createdAt": "2026-02-25T02:48:58.082Z"
     }
   ]
 }

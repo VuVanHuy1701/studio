@@ -1,6 +1,7 @@
+
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { Task } from '@/app/lib/types';
 import { useAuth } from '@/app/context/AuthContext';
 import { getTasksFromFile, persistTasksToFile } from '@/app/actions/task-actions';
@@ -30,6 +31,10 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
   
   const [notifiedTaskIds, setNotifiedTaskIds] = useState<Set<string>>(new Set());
   const [notifiedCompletedIds, setNotifiedCompletedIds] = useState<Set<string>>(new Set());
+  const [notifiedNoteIds, setNotifiedNoteIds] = useState<Map<string, string>>(new Map()); // taskId -> noteContent
+
+  // Use a ref to store the last known state to detect changes between polls
+  const lastStateRef = useRef<Map<string, { completed: boolean, notes: string }>>(new Map());
 
   const refreshTasks = useCallback(async () => {
     try {
@@ -72,9 +77,11 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
       setIdsLoaded(false);
       const savedNew = localStorage.getItem(`task_compass_notified_ids_${user.uid}`);
       const savedCompleted = localStorage.getItem(`task_compass_notified_comp_ids_${user.uid}`);
+      const savedNotes = localStorage.getItem(`task_compass_notified_notes_${user.uid}`);
       
       try { if (savedNew) setNotifiedTaskIds(new Set(JSON.parse(savedNew))); } catch (e) { setNotifiedTaskIds(new Set()); }
       try { if (savedCompleted) setNotifiedCompletedIds(new Set(JSON.parse(savedCompleted))); } catch (e) { setNotifiedCompletedIds(new Set()); }
+      try { if (savedNotes) setNotifiedNoteIds(new Map(Object.entries(JSON.parse(savedNotes)))); } catch (e) { setNotifiedNoteIds(new Map()); }
       setIdsLoaded(true);
     }
   }, [user]);
@@ -102,7 +109,7 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!isHydrated || !user || !idsLoaded || allTasks.length === 0) return;
 
-    // New Task Assignment Notifications
+    // New Task Assignment Notifications (for Users)
     const newTasksToNotify = allTasks.filter(t => {
       const isAssignedToMe = t.assignedTo.some(assignee => 
         assignee === user.displayName || 
@@ -111,16 +118,12 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
         (user.username && assignee === user.username) ||
         (assignee === 'Me' && t.createdBy === user.uid)
       );
-      return isAssignedToMe && !notifiedTaskIds.has(t.id) && !t.completed;
+      return isAssignedToMe && !notifiedTaskIds.has(t.id) && !t.completed && t.createdBy !== user.uid;
     });
 
     if (newTasksToNotify.length > 0) {
       newTasksToNotify.forEach(t => {
         const dueStr = format(new Date(t.dueDate), 'HH:mm - MMM dd');
-        // Structural Requirement:
-        // Line 1: Status
-        // Line 2: Task Name
-        // Line 3: Task Time
         toast({
           variant: t.priority === 'High' ? 'high' : t.priority === 'Medium' ? 'medium' : 'low',
           title: "New task assigned",
@@ -136,39 +139,60 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
       });
     }
 
-    // Task Completion Notifications (for Admins)
+    // Administrator Notifications
     if (user.role === 'admin') {
-      const completedTasksToNotify = allTasks.filter(t => 
-        t.completed && 
-        !notifiedCompletedIds.has(t.id) && 
-        t.completedBy && 
-        t.completedBy !== user.displayName &&
-        t.completedBy !== user.username &&
-        (t.createdBy === 'admin-id' || t.createdBy === 'admin' || t.assignedTo.includes('Me'))
-      );
+      allTasks.forEach(t => {
+        // Only notify for tasks the admin created but someone else updated
+        const isAdminCreated = t.createdBy === 'admin-id' || t.createdBy === 'admin';
+        if (!isAdminCreated) return;
 
-      if (completedTasksToNotify.length > 0) {
-        completedTasksToNotify.forEach(t => {
-          const compTimeStr = t.completedAt ? format(new Date(t.completedAt), 'HH:mm - MMM dd') : 'Unknown';
-          // Structural Requirement for Admin:
-          // Line 1: Status
-          // Line 2: Task Name
-          // Line 3: Completion Time
+        const lastState = lastStateRef.current.get(t.id);
+        const deadlineStr = format(new Date(t.dueDate), 'HH:mm - MMM dd');
+        const whoStr = t.completedBy || t.assignedTo?.[0] || 'Unknown User';
+
+        // 1. Detection of Completion (Green Border)
+        if (t.completed && (!lastState || !lastState.completed) && !notifiedCompletedIds.has(t.id)) {
+          const compTimeStr = t.completedAt ? format(new Date(t.completedAt), 'HH:mm - MMM dd') : 'Just now';
+          
           toast({
-            title: "Task Completed",
-            description: `Task: ${t.title}\nTime: ${compTimeStr}`,
+            variant: "success",
+            title: "Task completed",
+            description: `Line 1: Task completed\nLine 2: Task: ${t.title}\nLine 3: Note: ${t.notes || 'No note'}\nLine 4: Deadline: ${deadlineStr} - Done: ${compTimeStr}\nLine 5: User: ${whoStr}`,
           });
-        });
 
-        setNotifiedCompletedIds(prev => {
-          const next = new Set(prev);
-          completedTasksToNotify.forEach(t => next.add(t.id));
-          localStorage.setItem(`task_compass_notified_comp_ids_${user.uid}`, JSON.stringify(Array.from(next)));
-          return next;
-        });
-      }
+          setNotifiedCompletedIds(prev => {
+            const next = new Set(prev);
+            next.add(t.id);
+            localStorage.setItem(`task_compass_notified_comp_ids_${user.uid}`, JSON.stringify(Array.from(next)));
+            return next;
+          });
+        } 
+        
+        // 2. Detection of "Not Completed" update with Note change (Yellow Border)
+        else if (!t.completed && t.notes && t.notes !== notifiedNoteIds.get(t.id)) {
+           // Only notify if notes actually changed or progress was updated while incomplete
+           toast({
+            variant: "warning",
+            title: "Progress updated",
+            description: `Line 1: Progress updated\nLine 2: Task: ${t.title}\nLine 3: Note: ${t.notes}\nLine 4: Deadline: ${deadlineStr} - Progress: ${t.progress || 0}%\nLine 5: Reported by: ${whoStr}`,
+          });
+
+          setNotifiedNoteIds(prev => {
+            const next = new Map(prev);
+            next.set(t.id, t.notes!);
+            localStorage.setItem(`task_compass_notified_notes_${user.uid}`, JSON.stringify(Object.fromEntries(next)));
+            return next;
+          });
+        }
+      });
     }
-  }, [allTasks, user, isHydrated, idsLoaded, notifiedTaskIds, notifiedCompletedIds, toast]);
+
+    // Update the last seen state for all tasks
+    const newState = new Map();
+    allTasks.forEach(t => newState.set(t.id, { completed: t.completed, notes: t.notes || '' }));
+    lastStateRef.current = newState;
+
+  }, [allTasks, user, isHydrated, idsLoaded, notifiedTaskIds, notifiedCompletedIds, notifiedNoteIds, toast]);
 
   useEffect(() => {
     if (isHydrated) {
