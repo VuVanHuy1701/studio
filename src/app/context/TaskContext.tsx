@@ -127,7 +127,7 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
         toast({
           variant: t.priority === 'High' ? 'high' : t.priority === 'Medium' ? 'medium' : 'low',
           title: "New task assigned",
-          description: `Task: ${t.title}\nTime: ${dueStr}`,
+          description: `Line 1: New task assigned\nLine 2: Task: ${t.title}\nLine 3: Note: ${t.description || 'No description'} - Progress: ${t.progress || 0}%\nLine 4: Deadline: ${dueStr}`,
         });
       });
 
@@ -157,7 +157,7 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
           toast({
             variant: "success",
             title: "Task completed",
-            description: `Line 1: Task completed\nLine 2: Task: ${t.title}\nLine 3: Note: ${t.notes || 'No note'}\nLine 4: Deadline: ${deadlineStr} - Done: ${compTimeStr}\nLine 5: User: ${whoStr}`,
+            description: `Line 1: Task completed\nLine 2: Task: ${t.title}\nLine 3: Note: ${t.notes || 'No note'} - Progress: 100%\nLine 4: Deadline: ${deadlineStr} - Done: ${compTimeStr}\nLine 5: User: ${whoStr}`,
           });
 
           setNotifiedCompletedIds(prev => {
@@ -174,7 +174,7 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
            toast({
             variant: "warning",
             title: "Progress updated",
-            description: `Line 1: Progress updated\nLine 2: Task: ${t.title}\nLine 3: Note: ${t.notes}\nLine 4: Deadline: ${deadlineStr} - Progress: ${t.progress || 0}%\nLine 5: Reported by: ${whoStr}`,
+            description: `Line 1: Progress updated\nLine 2: Task: ${t.title}\nLine 3: Note: ${t.notes} - Progress: ${t.progress || 0}%\nLine 4: Deadline: ${deadlineStr}\nLine 5: Reported by: ${whoStr}`,
           });
 
           setNotifiedNoteIds(prev => {
