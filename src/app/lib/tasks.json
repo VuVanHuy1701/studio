@@ -900,16 +900,19 @@
       "description": "lần 4",
       "category": "Work",
       "dueDate": "2026-02-25T09:30:00.000Z",
-      "completed": false,
+      "completed": true,
       "priority": "Medium",
       "assignedTo": [
         "Test"
       ],
       "createdBy": "admin-id",
       "additionalTimeAllocated": true,
-      "progress": 0,
+      "progress": 100,
       "id": "e20snqy",
-      "createdAt": "2026-02-25T01:12:39.163Z"
+      "createdAt": "2026-02-25T01:12:39.163Z",
+      "notes": "",
+      "completedAt": "2026-02-25T02:35:42.022Z",
+      "completedBy": "Test"
     },
     {
       "title": "thông báo đẩy",
@@ -942,6 +945,38 @@
       "progress": 0,
       "id": "7ixszv4",
       "createdAt": "2026-02-25T02:26:19.145Z"
+    },
+    {
+      "title": "thử thông báo đẩy",
+      "description": "lần 7",
+      "category": "Work",
+      "dueDate": "2026-02-25T09:30:00.000Z",
+      "completed": false,
+      "priority": "Medium",
+      "assignedTo": [
+        "Test"
+      ],
+      "createdBy": "admin-id",
+      "additionalTimeAllocated": false,
+      "progress": 0,
+      "id": "hsbjlxt",
+      "createdAt": "2026-02-25T02:34:17.084Z"
+    },
+    {
+      "title": "thử thông báo đẩy",
+      "description": "lần 8",
+      "category": "Work",
+      "dueDate": "2026-02-25T09:30:00.000Z",
+      "completed": false,
+      "priority": "Medium",
+      "assignedTo": [
+        "Test"
+      ],
+      "createdBy": "admin-id",
+      "additionalTimeAllocated": false,
+      "progress": 0,
+      "id": "jpvxhjq",
+      "createdAt": "2026-02-25T02:35:08.597Z"
     }
   ]
 }

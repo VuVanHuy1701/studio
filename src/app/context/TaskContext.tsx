@@ -41,12 +41,15 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
       console.warn("Failed to fetch tasks from server, falling back to local storage", e);
       const savedTasks = localStorage.getItem('task_compass_tasks');
       if (savedTasks) {
-        setAllTasks(JSON.parse(savedTasks).map((t: any) => ({
-          ...t,
-          dueDate: new Date(t.dueDate),
-          completedAt: t.completedAt ? new Date(t.completedAt) : undefined,
-          createdAt: t.createdAt ? new Date(t.createdAt) : undefined
-        })));
+        try {
+          const parsed = JSON.parse(savedTasks);
+          setAllTasks(parsed.map((t: any) => ({
+            ...t,
+            dueDate: new Date(t.dueDate),
+            completedAt: t.completedAt ? new Date(t.completedAt) : undefined,
+            createdAt: t.createdAt ? new Date(t.createdAt) : undefined
+          })));
+        } catch (err) {}
       }
     }
     setIsHydrated(true);
@@ -83,13 +86,13 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
       const savedCompleted = localStorage.getItem(`task_compass_notified_comp_ids_${user.uid}`);
       
       if (savedNew) {
-        try { setNotifiedTaskIds(new Set(JSON.parse(savedNew))); } catch (e) {}
+        try { setNotifiedTaskIds(new Set(JSON.parse(savedNew))); } catch (e) { setNotifiedTaskIds(new Set()); }
       } else {
         setNotifiedTaskIds(new Set());
       }
 
       if (savedCompleted) {
-        try { setNotifiedCompletedIds(new Set(JSON.parse(savedCompleted))); } catch (e) {}
+        try { setNotifiedCompletedIds(new Set(JSON.parse(savedCompleted))); } catch (e) { setNotifiedCompletedIds(new Set()); }
       } else {
         setNotifiedCompletedIds(new Set());
       }
