@@ -1049,17 +1049,19 @@
       "description": "llaafn 2",
       "category": "Work",
       "dueDate": "2026-02-25T09:30:00.000Z",
-      "completed": false,
+      "completed": true,
       "priority": "Medium",
       "assignedTo": [
         "Test"
       ],
       "createdBy": "admin-id",
       "additionalTimeAllocated": true,
-      "progress": 32,
+      "progress": 100,
       "id": "xt2g1rb",
       "createdAt": "2026-02-25T02:56:21.609Z",
-      "notes": "chưa xong"
+      "notes": "xong",
+      "completedAt": "2026-02-25T03:00:21.480Z",
+      "completedBy": "Test"
     }
   ]
 }

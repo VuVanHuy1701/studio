@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
@@ -31,10 +30,9 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
   
   const [notifiedTaskIds, setNotifiedTaskIds] = useState<Set<string>>(new Set());
   const [notifiedCompletedIds, setNotifiedCompletedIds] = useState<Set<string>>(new Set());
-  const [notifiedNoteIds, setNotifiedNoteIds] = useState<Map<string, string>>(new Map()); // taskId -> noteContent
+  const [notifiedNoteIds, setNotifiedNoteIds] = useState<Map<string, string>>(new Map());
 
-  // Use a ref to store the last known state to detect changes between polls
-  const lastStateRef = useRef<Map<string, { completed: boolean, notes: string }>>(new Map());
+  const lastStateRef = useRef<Map<string, { completed: boolean, notes: string, progress: number }>>(new Map());
 
   const refreshTasks = useCallback(async () => {
     try {
@@ -105,11 +103,10 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
     return getVisibleTasks().filter(task => !task.completed && new Date(task.dueDate) < now);
   }, [getVisibleTasks]);
 
-  // Handle Notifications
   useEffect(() => {
     if (!isHydrated || !user || !idsLoaded || allTasks.length === 0) return;
 
-    // New Task Assignment Notifications (for Users)
+    // 1. User Assignment Notifications
     const newTasksToNotify = allTasks.filter(t => {
       const isAssignedToMe = t.assignedTo.some(assignee => 
         assignee === user.displayName || 
@@ -139,10 +136,9 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
       });
     }
 
-    // Administrator Notifications
+    // 2. Administrator Notifications
     if (user.role === 'admin') {
       allTasks.forEach(t => {
-        // Only notify for tasks the admin created but someone else updated
         const isAdminCreated = t.createdBy === 'admin-id' || t.createdBy === 'admin';
         if (!isAdminCreated) return;
 
@@ -150,7 +146,7 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
         const deadlineStr = format(new Date(t.dueDate), 'HH:mm - MMM dd');
         const whoStr = t.completedBy || t.assignedTo?.[0] || 'Unknown User';
 
-        // 1. Detection of Completion (Green Border)
+        // Completion (Green Border)
         if (t.completed && (!lastState || !lastState.completed) && !notifiedCompletedIds.has(t.id)) {
           const compTimeStr = t.completedAt ? format(new Date(t.completedAt), 'HH:mm - MMM dd') : 'Just now';
           
@@ -168,18 +164,17 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
           });
         } 
         
-        // 2. Detection of "Not Completed" update with Note change (Yellow Border)
-        else if (!t.completed && t.notes && t.notes !== notifiedNoteIds.get(t.id)) {
-           // Only notify if notes actually changed or progress was updated while incomplete
+        // Progress Updated (Yellow Border) - Triggered when notes or progress changes but task is not complete
+        else if (!t.completed && ((t.notes && t.notes !== lastState?.notes) || (t.progress !== lastState?.progress))) {
            toast({
             variant: "warning",
             title: "Progress updated",
-            description: `Line 1: Progress updated\nLine 2: Task: ${t.title}\nLine 3: Note: ${t.notes} - Progress: ${t.progress || 0}%\nLine 4: Deadline: ${deadlineStr}\nLine 5: Reported by: ${whoStr}`,
+            description: `Line 1: Progress updated\nLine 2: Task: ${t.title}\nLine 3: Note: ${t.notes || 'No note'} - Progress: ${t.progress || 0}%\nLine 4: Deadline: ${deadlineStr}\nLine 5: Reported by: ${whoStr}`,
           });
 
           setNotifiedNoteIds(prev => {
             const next = new Map(prev);
-            next.set(t.id, t.notes!);
+            next.set(t.id, t.notes || '');
             localStorage.setItem(`task_compass_notified_notes_${user.uid}`, JSON.stringify(Object.fromEntries(next)));
             return next;
           });
@@ -187,9 +182,8 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
       });
     }
 
-    // Update the last seen state for all tasks
     const newState = new Map();
-    allTasks.forEach(t => newState.set(t.id, { completed: t.completed, notes: t.notes || '' }));
+    allTasks.forEach(t => newState.set(t.id, { completed: t.completed, notes: t.notes || '', progress: t.progress || 0 }));
     lastStateRef.current = newState;
 
   }, [allTasks, user, isHydrated, idsLoaded, notifiedTaskIds, notifiedCompletedIds, notifiedNoteIds, toast]);

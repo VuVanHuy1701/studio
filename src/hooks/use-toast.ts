@@ -8,7 +8,9 @@ import type {
 } from "@/components/ui/toast"
 
 const TOAST_LIMIT = 10
-const TOAST_REMOVE_DELAY = 86400000 // 24 hours (manual dismissal only)
+// We set a very high delay to effectively disable auto-dismiss, 
+// ensuring notifications stay until manually closed.
+const TOAST_REMOVE_DELAY = 999999999 
 
 type ToasterToast = ToastProps & {
   id: string
