@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
@@ -239,56 +238,6 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
       }
     }
   }, [allTasks, user, isHydrated, idsLoaded, notifiedTaskIds, notifiedCompletedIds, toast, triggerSystemNotification]);
-
-  useEffect(() => {
-    if (!isHydrated || !user) return;
-
-    const checkScheduledNotifications = () => {
-      const now = new Date();
-      const hours = now.getHours();
-      const minutes = now.getMinutes();
-      
-      const is7AM = hours === 7 && minutes >= 0 && minutes < 5;
-      const is7PM = hours === 19 && minutes >= 0 && minutes < 5;
-      
-      if (is7AM || is7PM) {
-        const slotKey = is7AM ? 'AM' : 'PM';
-        const dateKey = format(now, 'yyyy-MM-dd');
-        const storageKey = `task_compass_scheduled_summary_${user.uid}_${dateKey}_${slotKey}`;
-        
-        if (!localStorage.getItem(storageKey)) {
-          const visibleTasks = getVisibleTasks();
-          const unfinished = visibleTasks.filter(t => !t.completed).length;
-          const overdueCount = getOverdueTasks().length;
-
-          if (unfinished > 0 || overdueCount > 0) {
-            toast({
-              title: "Tasks to be completed",
-              description: (
-                <div className="flex flex-col gap-0.5 mt-1">
-                  <div className="text-sm font-bold leading-tight">Unfinished tasks: {unfinished}</div>
-                  <div className="text-sm font-bold leading-tight">Overdue tasks: {overdueCount}</div>
-                </div>
-              ),
-              variant: overdueCount > 0 ? "high" : "medium",
-              duration: 86400000, 
-            });
-
-            triggerSystemNotification(
-              "Tasks to be completed",
-              `Unfinished tasks: ${unfinished}\nOverdue tasks: ${overdueCount}`
-            );
-
-            localStorage.setItem(storageKey, 'sent');
-          }
-        }
-      }
-    };
-
-    const intervalId = setInterval(checkScheduledNotifications, 60000);
-    checkScheduledNotifications();
-    return () => clearInterval(intervalId);
-  }, [isHydrated, user, getVisibleTasks, getOverdueTasks, toast, triggerSystemNotification]);
 
   useEffect(() => {
     if (isHydrated) {
