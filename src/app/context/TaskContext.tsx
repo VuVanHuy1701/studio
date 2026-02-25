@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
@@ -99,7 +100,7 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
   const getVisibleTasks = useCallback(() => {
     if (!user) return [];
     return allTasks.filter(t => {
-      if (t.createdBy === user.uid || t.createdBy === 'admin-id' && user.role === 'admin') return true;
+      if (t.createdBy === user.uid || (t.createdBy === 'admin-id' && user.role === 'admin')) return true;
       const isAssignedToMe = t.assignedTo.some(assignee => 
         assignee === user.displayName || 
         assignee === user.email || 
@@ -121,12 +122,16 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
       try {
         const registration = await navigator.serviceWorker.ready;
         if (Notification.permission === 'granted') {
+          // Use a timestamp to ensure uniqueness and order
+          const timestamp = Date.now();
           registration.showNotification(title, {
             body,
             icon: 'https://picsum.photos/seed/taskicon/192/192',
+            badge: 'https://picsum.photos/seed/taskbadge/96/96',
             requireInteraction: true,
+            tag: taskId || `summary-${timestamp}`,
             data: {
-              url: taskId ? `/tasks?taskId=${taskId}` : '/'
+              url: taskId ? `${window.location.origin}/tasks?taskId=${taskId}` : window.location.origin
             }
           });
         }
@@ -166,7 +171,7 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
               <div className="text-sm font-bold leading-tight">{t.title}</div>
               <div className="text-sm leading-tight opacity-90">{t.description || "No content"}</div>
               <div className="text-[11px] opacity-80 mt-1">
-                {dueStr}; Importance: <span className="font-bold">{importance}</span>
+                Due: {dueStr}; Importance: <span className="font-bold">{importance}</span>
               </div>
               <div className="text-[10px] opacity-70 mt-1 font-medium italic">
                 Assigned at: {assignedStr}
@@ -179,7 +184,7 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
 
         triggerSystemNotification(
           "New task assigned", 
-          `New task assigned\n${t.title}\n${t.description || 'No content'}\n${dueStr}; Importance: ${importance}\nAssigned at: ${assignedStr}`,
+          `${t.title}\nDue: ${dueStr}\nImportance: ${importance}\nAssigned at: ${assignedStr}`,
           t.id
         );
       });
@@ -214,7 +219,6 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
                 <div className="text-sm font-bold leading-tight">{t.title}</div>
                 <div className="text-[11px] leading-tight opacity-90 italic">"{t.description || 'No description'}"</div>
                 <div className="text-[11px] mt-1">Finished: <span className="font-medium">{compTimeStr}</span></div>
-                <div className="text-[11px] bg-white/40 p-1 rounded mt-1">Notes: {t.notes || 'No notes provided'}</div>
                 <div className="text-[11px] mt-1 font-bold">Completed by: {t.completedBy}</div>
               </div>
             ),
@@ -222,7 +226,7 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
 
           triggerSystemNotification(
             "Task Status Update",
-            `Task completed\n${t.title}\nFinished: ${compTimeStr}\nBy: ${t.completedBy}`,
+            `Task completed: ${t.title}\nFinished: ${compTimeStr}\nBy: ${t.completedBy}`,
             t.id
           );
         });
@@ -272,8 +276,8 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
             });
 
             triggerSystemNotification(
-              "Task Compass Summary",
-              `Tasks to be completed\nUnfinished tasks: ${unfinished}\nOverdue tasks: ${overdueCount}`
+              "Tasks to be completed",
+              `Unfinished tasks: ${unfinished}\nOverdue tasks: ${overdueCount}`
             );
 
             localStorage.setItem(storageKey, 'sent');
