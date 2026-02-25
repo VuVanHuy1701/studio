@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
@@ -142,6 +143,7 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!isHydrated || !user || !idsLoaded || allTasks.length === 0) return;
 
+    // Logic for New Task Notifications (for Users)
     const newTasksToNotify = allTasks.filter(t => {
       const isAssignedToMe = t.assignedTo.some(assignee => 
         assignee === user.displayName || 
@@ -160,25 +162,6 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
         const assignedTime = t.createdAt ? new Date(t.createdAt) : new Date();
         const assignedStr = format(assignedTime, 'HH:mm - MMM dd');
         const importance = t.priority;
-        const variant = t.priority.toLowerCase() as 'low' | 'medium' | 'high';
-
-        toast({
-          title: "New task assigned",
-          description: (
-            <div className="flex flex-col gap-0.5 mt-1">
-              <div className="text-sm font-bold leading-tight">{t.title}</div>
-              <div className="text-sm leading-tight opacity-90">{t.description || "No content"}</div>
-              <div className="text-[11px] opacity-80 mt-1">
-                Due: {dueStr}; Importance: <span className="font-bold">{importance}</span>
-              </div>
-              <div className="text-[10px] opacity-70 mt-1 font-medium italic">
-                Assigned at: {assignedStr}
-              </div>
-            </div>
-          ),
-          variant: variant,
-          duration: 86400000, 
-        });
 
         triggerSystemNotification(
           "New task assigned", 
@@ -195,36 +178,24 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
       });
     }
 
+    // Logic for Task Completion Notifications (for Administrators)
     if (user.role === 'admin') {
       const completedTasksToNotify = allTasks.filter(t => 
         t.completed && 
         !notifiedCompletedIds.has(t.id) && 
         t.completedBy && 
         t.completedBy !== user.displayName &&
-        (t.createdBy === 'admin-id' || t.createdBy === 'admin')
+        t.completedBy !== user.username &&
+        (t.createdBy === 'admin-id' || t.createdBy === 'admin' || t.assignedTo.includes('Me'))
       );
 
       if (completedTasksToNotify.length > 0) {
         completedTasksToNotify.forEach(t => {
           const compTimeStr = t.completedAt ? format(new Date(t.completedAt), 'HH:mm - MMM dd') : 'Unknown';
           
-          toast({
-            title: "Task completed",
-            variant: "low",
-            duration: 86400000,
-            description: (
-              <div className="flex flex-col gap-0.5 mt-1">
-                <div className="text-sm font-bold leading-tight">{t.title}</div>
-                <div className="text-[11px] leading-tight opacity-90 italic">"{t.description || 'No description'}"</div>
-                <div className="text-[11px] mt-1">Finished: <span className="font-medium">{compTimeStr}</span></div>
-                <div className="text-[11px] mt-1 font-bold">Completed by: {t.completedBy}</div>
-              </div>
-            ),
-          });
-
           triggerSystemNotification(
-            "Task Status Update",
-            `Task completed: ${t.title}\nFinished: ${compTimeStr}\nBy: ${t.completedBy}`,
+            "Task Completed",
+            `Task: ${t.title}\nFinished: ${compTimeStr}\nBy: ${t.completedBy}`,
             t.id
           );
         });
@@ -237,7 +208,7 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
         });
       }
     }
-  }, [allTasks, user, isHydrated, idsLoaded, notifiedTaskIds, notifiedCompletedIds, toast, triggerSystemNotification]);
+  }, [allTasks, user, isHydrated, idsLoaded, notifiedTaskIds, notifiedCompletedIds, triggerSystemNotification]);
 
   useEffect(() => {
     if (isHydrated) {
